@@ -1,6 +1,6 @@
 {
   "short_name": "Monitoreo",
-  "name": "Agro Monitor — Planilla de Campo",
+  "name": "Agro Monitor \u2014 Planilla de Campo",
   "description": "App de monitoreo de cultivos para monitoreadores de campo",
   "icons": [
     {
@@ -16,11 +16,10 @@
       "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "theme_color": "#2d7a47",
-  "background_color": "#f5f7f4",
-  "lang": "es",
-  "categories": ["productivity", "agriculture"]
+  "theme_color": "#1c4a25",
+  "background_color": "#1c4a25",
+  "lang": "es"
 }

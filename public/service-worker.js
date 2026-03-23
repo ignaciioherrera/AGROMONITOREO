@@ -1,4 +1,4 @@
-const CACHE_NAME = "agro-monitor-v1";
+const CACHE_NAME = "agro-monitor-v2";
 const STATIC_ASSETS = ["/", "/index.html", "/static/js/main.chunk.js", "/static/js/bundle.js"];
 
 self.addEventListener("install", (e) => {
