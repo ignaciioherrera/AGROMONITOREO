@@ -474,6 +474,12 @@ function AppInner() {
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#f5c542", display: "inline-block", flexShrink: 0 }} />
                 {syncing ? "Enviando..." : `${pendingCount} pendiente${pendingCount > 1 ? "s" : ""} · Sincronizar`}
               </button>
+              <button
+                onClick={() => { saveQueue([]); setPendingCount(0); }}
+                style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "4px 10px", color: "#fff", fontFamily: FONT, fontSize: 10, cursor: "pointer" }}
+              >
+                ✕ Limpiar
+              </button>
             )}
             {pendingCount === 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
