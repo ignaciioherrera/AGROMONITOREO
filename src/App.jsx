@@ -74,14 +74,56 @@ const C = {
 const FONT = `'DM Mono', 'Courier New', monospace`;
 const SANS = `'DM Sans', 'Segoe UI', sans-serif`;
 
-const LOTES = [
-  "Lote Norte A — Maíz",
-  "Lote Sur B — Soja",
-  "Lote Este C — Trigo",
-  "Planta Semillas",
-  "Silo Bolsa 1",
-  "Silo Bolsa 2",
+const EMPRESAS = [
+  { empresa: "IGNACIO HERRERA", campos: [
+    { campo: "LASTRA", lotes: ["LASTRA 1","LASTRA 2","ZULEMA LASTRA"] },
+  ]},
+  { empresa: "AGROCORSI", campos: [
+    { campo: "AGROCORSI", lotes: ["ANTONELLA","MARTINEZ"] },
+    { campo: "EL PAMPA", lotes: ["EL PAMPA LOTE V1A","EL PAMPA LOTE V1B","EL PAMPA LOTE V2","EL PAMPA LOTE V3","EL PAMPA LOTE V4","EL PAMPA LOTE V5","EL PAMPA LOTE V6","EL PAMPA LOTE V7","EL PAMPA LOTE V8","EL PAMPA LOTE V9","EL PAMPA LOTE V10A","EL PAMPA LOTE V10B","EL PAMPA LOTE V11"] },
+    { campo: "SAN PEDRO", lotes: ["SAN PEDRO LOTE 1","SAN PEDRO LOTE 2","SAN PEDRO LOTE 3","SAN PEDRO LOTE 4","SAN PEDRO LOTE 5","SAN PEDRO LOTE 6","SAN PEDRO LOTE 7","SAN PEDRO LOTE 8","SAN PEDRO LOTE 9","SAN PEDRO LOTE 10","SAN PEDRO LOTE 11A","SAN PEDRO LOTE 11B","SAN PEDRO LOTE 11C","SAN PEDRO LOTE 12"] },
+    { campo: "LAS MARIAS", lotes: ["LAS MARIAS"] },
+  ]},
+  { empresa: "GREGORET HNOS", campos: [
+    { campo: "BANDERA", lotes: ["SAN PABLO","LA PAMPITA","FIORI","FIORI 1","FIORI RICARDO","ANAYA","ROMAN","LA PERSEVERANCIA","EL SUIZO","LA CUÑA","ESTANCIA GREGORET","NORMA QUIROZ"] },
+  ]},
+  { empresa: "PIGHIN", campos: [
+    { campo: "LA LUNA", lotes: ["FERNANDO 1","FERNANDO 2","FERNANDO 3","FERNANDO 4","FERNANDO 5","FERNANDO 6","FERNANDO 7","FERNANDO 8"] },
+    { campo: "EL PROGRESO", lotes: ["EL PROGRESO LOTE 1","EL PROGRESO LOTE 2A","EL PROGRESO LOTE 2B","EL PROGRESO LOTE 3","EL PROGRESO 4A","EL PROGRESO LOTE 4B","EL PROGRESO LOTE 5"] },
+  ]},
+  { empresa: "BERTOLI VARRONE", campos: [
+    { campo: "TIERRAS DEL OESTE", lotes: ["TIERRAS DEL OESTE 1","TIERRAS DEL OESTE 3-5","TIERRAS DEL OESTE 4-6","TIERRAS DEL OESTE 7","TIERRAS DEL OESTE 8-11-12","TIERRAS DEL OESTE 9","TIERRAS DEL OESTE 10","TIERRAS DEL OESTE 13","TIERRAS DEL OESTE 14","TIERRAS DEL OESTE 15","EL QUEBRACHO"] },
+    { campo: "TIERRAS DEL OESTE PUPI", lotes: ["LINARES GIANFRANCO BERTOLI"] },
+    { campo: "LA GRATITUD", lotes: ["LA GRATITUD"] },
+    { campo: "LA PIAMONTESA", lotes: ["PIAMONTESA LP1","LA PIAMONTESA LP2"] },
+    { campo: "LA JUANITA", lotes: ["LA JUANITA LJ1","LA JUANITA LJ2","LA JUANITA LJ3"] },
+    { campo: "CARDOZO", lotes: ["BERTOLI CARDOZO"] },
+    { campo: "FIORI", lotes: ["BERTOLI FIORI"] },
+    { campo: "EL SIN QUERER", lotes: ["EL SIN QUERER"] },
+    { campo: "URUNDAY", lotes: ["URUNDAY 1","URUNDAY 2","URUNDAY 3","URUNDAY 4","URUNDAY 5","URUNDAY 6","URUNDAY 7"] },
+    { campo: "SANTA MARIA", lotes: ["SANTA MARIA 1","SANTA MARIA 2","SANTA MARIA 3","SANTA MARIA 4","SANTA MARIA 5"] },
+    { campo: "PERALTA", lotes: ["PERALTA"] },
+    { campo: "GOROSITO", lotes: ["GOROSITO"] },
+    { campo: "LOS CORDOBESES", lotes: ["LOS CORDOBESES 1","LOS CORDOBESES 2","LOS CORDOBESES 3","LOS CORDOBESES 4","LOS CORDOBESES 5","LOS CORDOBESES 13","LOS CORDOBESES 15"] },
+    { campo: "JUVENCIO", lotes: ["JUVENCIO"] },
+    { campo: "LEGUIZAMON", lotes: ["LEGUIZAMON"] },
+    { campo: "ETHEL VARGAS", lotes: ["ETEL VARGAS 1","ETEL VARGAS 2","ETHEL VARGAS 3"] },
+    { campo: "ABRAHAM", lotes: ["ABRAHAM"] },
+    { campo: "GAUTO", lotes: ["GAUTO"] },
+    { campo: "DOMINGO LOPEZ", lotes: ["DOMINGO LOPEZ"] },
+    { campo: "KAKUY", lotes: ["KAKUY"] },
+    { campo: "PANAMBI", lotes: ["PANAMBI PA1","PANAMBI PA2"] },
+    { campo: "LOS QUIMILES", lotes: ["CORDERO A","QUIMIL"] },
+  ]},
+  { empresa: "GOROSITO/SIGOTO/BERTOLI", campos: [
+    { campo: "EL OCASO", lotes: ["OCASO LOTE 1 ESTE","OCASO LOTE 2 OESTE"] },
+  ]},
+  { empresa: "VACHETTA", campos: [
+    { campo: "DON ALBINO", lotes: ["VACHETTA LOTE 1","VACHETTA LOTE 2"] },
+  ]},
 ];
+const CAMPOS = EMPRESAS.flatMap(e => e.campos.map(c => ({ ...c, empresa: e.empresa })));
+const LOTES = CAMPOS.flatMap(c => c.lotes);
 
 const CULTIVOS = ["Maíz", "Soja", "Trigo", "Girasol", "Sorgo", "Maní", "Otro"];
 const ENFERMEDADES = ["Roya", "Mancha marrón", "Tizón", "Podredumbre", "Fusarium", "Esclerotinia", "Carbón", "Otra"];
@@ -216,7 +258,7 @@ export default function App() {
   }, []);
 
   const [data, setData] = useState({
-    lote: "", cultivo: "",
+    empresa: "", campo: "", lote: "", cultivo: "",
     fecha: new Date().toISOString().split("T")[0],
     hora: new Date().toTimeString().slice(0, 5),
     estacionMuestreo: "",
@@ -282,13 +324,15 @@ export default function App() {
 
   const clearFirma = () => { if (canvasRef.current) { canvasRef.current.getContext("2d").clearRect(0, 0, canvasRef.current.width, canvasRef.current.height); } setFirma(""); };
 
-  const canSubmit = data.lote && data.cultivo;
+  const canSubmit = data.empresa && data.campo && data.lote && data.cultivo;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setStep("confirm");
     try {
       const payload = {
+        empresa: data.empresa,
+        campo: data.campo,
         lote: data.lote,
         cultivo: data.cultivo,
         fecha: data.fecha,
@@ -371,7 +415,7 @@ export default function App() {
 
   const reset = () => {
     setStep("form"); setPhotos([]); setGps(null); setFirma(""); setFirmaActiva(false);
-    setData(p => ({ ...p, lote: "", cultivo: "", estacionMuestreo: "", plantasPorMetro: "", alturaPlanta: "", cobertura: "", vuelco: false, acame: false, isocas: "", chinches: "", pulgones: "", trips: "", tripsFlor: "", aranhuelas: "", chicharrita: "", barrenador: "", cogollero: "", moscaBlanca: "", otraPlaga: "", otraPlagaCantidad: "", enfermedades: [], enfermedadesRaiz: [], malezas: [], estresHidrico: 0, danoHerbicida: false, danoGranizo: false, humedadSuelo: "", observaciones: "", recomendaciones: "" }));
+    setData(p => ({ ...p, empresa: "", campo: "", lote: "", cultivo: "", estacionMuestreo: "", plantasPorMetro: "", alturaPlanta: "", cobertura: "", vuelco: false, acame: false, isocas: "", chinches: "", pulgones: "", trips: "", tripsFlor: "", aranhuelas: "", chicharrita: "", barrenador: "", cogollero: "", moscaBlanca: "", otraPlaga: "", otraPlagaCantidad: "", enfermedades: [], enfermedadesRaiz: [], malezas: [], estresHidrico: 0, danoHerbicida: false, danoGranizo: false, humedadSuelo: "", observaciones: "", recomendaciones: "" }));
   };
 
   if (step === "success") return (
@@ -379,7 +423,9 @@ export default function App() {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;700&family=DM+Sans:wght@400;600;700&display=swap'); * { box-sizing: border-box; }`}</style>
       <div style={{ width: 80, height: 80, borderRadius: "50%", background: C.accentLight, border: `3px solid ${C.accent}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, marginBottom: 20 }}>✓</div>
       <div style={{ fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 8 }}>Monitoreo enviado</div>
-      <div style={{ fontSize: 14, color: C.textDim, marginBottom: 4 }}>{data.lote}</div>
+      <div style={{ fontSize: 12, color: C.accent, marginBottom: 1 }}>{data.empresa}</div>
+      <div style={{ fontSize: 13, color: C.textDim, marginBottom: 2 }}>{data.campo}</div>
+      <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 4 }}>{data.lote}</div>
       <div style={{ fontSize: 13, color: C.textFaint, marginBottom: 4 }}>{data.cultivo}{data.estacionMuestreo ? ` · Estación ${data.estacionMuestreo}` : ""}</div>
       <div style={{ fontSize: 13, color: C.textFaint, marginBottom: 4 }}>{data.fecha} · {data.hora}</div>
       {gps && !gps.error && <div style={{ fontSize: 12, color: C.textFaint, marginBottom: 4 }}>📍 {gps.lat}, {gps.lng}</div>}
@@ -443,10 +489,24 @@ export default function App() {
 
         <SECTION title="IDENTIFICACIÓN" icon="📍" accent>
           <div style={{ marginBottom: 12 }}>
+            <Label>Empresa *</Label>
+            <select value={data.empresa} onChange={e => { set("empresa", e.target.value); set("campo", ""); set("lote", ""); }} style={{ ...inputBase, border: `1.5px solid ${data.empresa ? C.accent : C.border}`, color: data.empresa ? C.text : C.textFaint }}>
+              <option value="">Seleccionar empresa...</option>
+              {EMPRESAS.map(e => <option key={e.empresa} value={e.empresa}>{e.empresa}</option>)}
+            </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <Label>Campo *</Label>
+            <select value={data.campo} onChange={e => { set("campo", e.target.value); set("lote", ""); }} disabled={!data.empresa} style={{ ...inputBase, border: `1.5px solid ${data.campo ? C.accent : C.border}`, color: data.campo ? C.text : C.textFaint, opacity: data.empresa ? 1 : 0.5 }}>
+              <option value="">{data.empresa ? "Seleccionar campo..." : "Primero seleccioná la empresa"}</option>
+              {data.empresa && EMPRESAS.find(e => e.empresa === data.empresa)?.campos.map(c => <option key={c.campo} value={c.campo}>{c.campo}</option>)}
+            </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
             <Label>Lote *</Label>
-            <select value={data.lote} onChange={e => set("lote", e.target.value)} style={{ ...inputBase, border: `1.5px solid ${data.lote ? C.accent : C.border}`, color: data.lote ? C.text : C.textFaint }}>
-              <option value="">Seleccionar lote...</option>
-              {LOTES.map(l => <option key={l} value={l}>{l}</option>)}
+            <select value={data.lote} onChange={e => set("lote", e.target.value)} disabled={!data.campo} style={{ ...inputBase, border: `1.5px solid ${data.lote ? C.accent : C.border}`, color: data.lote ? C.text : C.textFaint, opacity: data.campo ? 1 : 0.5 }}>
+              <option value="">{data.campo ? "Seleccionar lote..." : "Primero seleccioná el campo"}</option>
+              {data.campo && EMPRESAS.find(e => e.empresa === data.empresa)?.campos.find(c => c.campo === data.campo)?.lotes.map(l => <option key={l} value={l}>{l}</option>)}
             </select>
           </div>
           <div style={{ marginBottom: 12 }}>
@@ -609,7 +669,7 @@ export default function App() {
       </div>
 
       <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: C.surface, borderTop: `1px solid ${C.border}`, padding: "14px 16px 24px", zIndex: 200 }}>
-        {!canSubmit && <div style={{ fontFamily: SANS, fontSize: 12, color: C.warn, textAlign: "center", marginBottom: 10 }}>⚠ Completá Lote y Cultivo para enviar</div>}
+        {!canSubmit && <div style={{ fontFamily: SANS, fontSize: 12, color: C.warn, textAlign: "center", marginBottom: 10 }}>⚠ Completá Empresa, Campo, Lote y Cultivo para enviar</div>}
         <button onClick={handleSubmit} disabled={!canSubmit}
           style={{ width: "100%", border: "none", borderRadius: 14, padding: "16px", fontFamily: FONT, fontSize: 14, fontWeight: 700, letterSpacing: 2, cursor: canSubmit ? "pointer" : "not-allowed", background: canSubmit ? C.accent : C.border, color: canSubmit ? "#fff" : C.textFaint, transition: "all 0.2s" }}>
           {`ENVIAR MONITOREO${photos.length > 0 ? ` · ${photos.length} FOTO${photos.length > 1 ? "S" : ""}` : ""}${firma ? " · FIRMADO ✓" : ""}`}
