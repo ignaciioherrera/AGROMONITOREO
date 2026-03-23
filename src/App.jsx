@@ -466,20 +466,22 @@ function AppInner() {
           <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
             <div style={{ fontFamily: FONT, fontSize: 12, color: "rgba(255,255,255,0.8)" }}>{data.fecha} · {data.hora}</div>
             {pendingCount > 0 && (
-              <button
-                onClick={async () => { setSyncing(true); await syncQueue(); setPendingCount(getQueue().length); setSyncing(false); }}
-                disabled={syncing}
-                style={{ background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 20, padding: "4px 12px", color: "#fff", fontFamily: FONT, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
-              >
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#f5c542", display: "inline-block", flexShrink: 0 }} />
-                {syncing ? "Enviando..." : `${pendingCount} pendiente${pendingCount > 1 ? "s" : ""} · Sincronizar`}
-              </button>
-              <button
-                onClick={() => { saveQueue([]); setPendingCount(0); }}
-                style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "4px 10px", color: "#fff", fontFamily: FONT, fontSize: 10, cursor: "pointer" }}
-              >
-                ✕ Limpiar
-              </button>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button
+                  onClick={async () => { setSyncing(true); await syncQueue(); setPendingCount(getQueue().length); setSyncing(false); }}
+                  disabled={syncing}
+                  style={{ background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 20, padding: "4px 12px", color: "#fff", fontFamily: FONT, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+                >
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#f5c542", display: "inline-block", flexShrink: 0 }} />
+                  {syncing ? "Enviando..." : `${pendingCount} pendiente${pendingCount > 1 ? "s" : ""} · Sincronizar`}
+                </button>
+                <button
+                  onClick={() => { saveQueue([]); setPendingCount(0); }}
+                  style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "4px 10px", color: "#fff", fontFamily: FONT, fontSize: 10, cursor: "pointer" }}
+                >
+                  ✕ Limpiar
+                </button>
+              </div>
             )}
             {pendingCount === 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
