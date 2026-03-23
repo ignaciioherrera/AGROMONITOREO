@@ -283,7 +283,6 @@ function AppInner() {
   useEffect(() => {
     setPendingCount(getQueue().length);
     const trySync = async () => {
-      if (!navigator.onLine) return;
       setSyncing(true);
       const sent = await syncQueue();
       setPendingCount(getQueue().length);
@@ -390,18 +389,11 @@ function AppInner() {
         recomendaciones: data.recomendaciones || null,
         fotos_count: photos.length,
       };
-      if (navigator.onLine) {
-        try {
-          await supabaseInsert(payload);
-          // Also try to flush the queue while we're online
-          await syncQueue();
-          setPendingCount(getQueue().length);
-        } catch {
-          // No connection despite onLine flag, queue it
-          addToQueue(payload);
-          setPendingCount(getQueue().length);
-        }
-      } else {
+      try {
+        await supabaseInsert(payload);
+        await syncQueue();
+        setPendingCount(getQueue().length);
+      } catch {
         addToQueue(payload);
         setPendingCount(getQueue().length);
       }
@@ -430,10 +422,9 @@ function AppInner() {
       <div style={{ fontSize: 13, color: C.textFaint, marginBottom: 4 }}>{data.fecha} · {data.hora}</div>
       {gps && !gps.error && <div style={{ fontSize: 12, color: C.textFaint, marginBottom: 4 }}>📍 {gps.lat}, {gps.lng}</div>}
       <div style={{ fontSize: 13, color: C.textFaint, marginBottom: 12 }}>{photos.length} foto{photos.length !== 1 ? "s" : ""}</div>
-      {pendingCount > 0
-        ? <div style={{ background: C.warnLight, border: `1px solid ${C.warn}40`, borderRadius: 10, padding: "10px 18px", marginBottom: 24, fontSize: 13, color: C.warn, textAlign: "center" }}>📡 Sin señal — guardado en el dispositivo<br /><span style={{ fontSize: 12 }}>{pendingCount} monitoreo{pendingCount > 1 ? "s" : ""} pendiente{pendingCount > 1 ? "s" : ""} de envío</span></div>
-        : <div style={{ background: C.accentLight, border: `1px solid ${C.accent}30`, borderRadius: 10, padding: "10px 18px", marginBottom: 24, fontSize: 13, color: C.accentDark, textAlign: "center" }}>✓ Enviado a Supabase</div>
-      }
+      <div style={{ background: pendingCount > 0 ? C.warnLight : C.accentLight, border: `1px solid ${pendingCount > 0 ? C.warn + "40" : C.accent + "30"}`, borderRadius: 10, padding: "10px 18px", marginBottom: 24, fontSize: 13, color: pendingCount > 0 ? C.warn : C.accentDark, textAlign: "center" }}>
+        {pendingCount > 0 ? `⚠ Guardado localmente — ${pendingCount} pendiente${pendingCount > 1 ? "s" : ""} de envío` : "✓ Enviado correctamente"}
+      </div>
       <button onClick={reset} style={{ background: C.accent, border: "none", borderRadius: 14, padding: "14px 36px", color: "#fff", fontFamily: FONT, fontSize: 14, fontWeight: 700, cursor: "pointer", letterSpacing: 1 }}>NUEVO MONITOREO</button>
     </div>
   );
