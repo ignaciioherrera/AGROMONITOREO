@@ -129,7 +129,6 @@ const LOTES = CAMPOS.flatMap(c => c.lotes);
 
 const CULTIVOS = ["Maíz", "Soja", "Trigo", "Girasol", "Sorgo", "Maní", "Otro"];
 const ENFERMEDADES = ["Roya", "Mancha marrón", "Tizón", "Podredumbre", "Fusarium", "Esclerotinia", "Carbón", "Otra"];
-const ENFERMEDADES_RAIZ = ["Podredumbre radicular", "Pythium", "Rhizoctonia", "Fusarium raíz", "Otra"];
 const MALEZAS = ["Sorgo de alepo", "Gramón", "Ciperácea", "Verdolaga", "Yuyo colorado", "Rama negra", "Capín", "Otra"];
 
 const inputBase = {
@@ -233,6 +232,15 @@ const CheckGrid = ({ items, selected, onChange }) => (
         </div>
       );
     })}
+  </div>
+);
+
+
+const PlagaRow = ({ title, scientific, children, last }) => (
+  <div style={{ paddingBottom: 14, marginBottom: last ? 0 : 14, borderBottom: last ? "none" : `1px solid ${C.border}` }}>
+    <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: C.text, marginBottom: scientific ? 2 : 8 }}>{title}</div>
+    {scientific && <div style={{ fontFamily: SANS, fontSize: 11, color: C.textFaint, marginBottom: 8, fontStyle: "italic" }}>{scientific}</div>}
+    {children}
   </div>
 );
 
