@@ -404,8 +404,8 @@ export default function App() {
   };
 
   const reset = () => {
-    setStep("form"); setPhotos([]); setGps(null); setFirma(""); setFirmaActiva(false);
-    setData(p => ({ ...p, empresa: "", campo: "", lote: "", cultivo: "", estacionMuestreo: "", plantasPorMetro: "", cobertura: "", vuelco: false, isocas: "", chinches: "", pulgones: "", trips: "", aranhuelas: "", chicharrita: "", barrenador: "", cogollero: "", moscaBlanca: "", otraPlaga: "", otraPlagaCantidad: "", enfermedades: [], malezas: [], estresHidrico: 0, danoHerbicida: false, danoGranizo: false, observaciones: "", recomendaciones: "" }));
+    setStep("form"); setPhotos([]); setGps(null);
+    setData(p => ({ ...p, empresa: "", campo: "", lote: "", cultivo: "", estacionMuestreo: "", plantasPorMetro: "", cobertura: "", vuelco: false, isocas: "", chinches: "", pulgones: "", trips: "", aranhuelas: "", chicharrita: "", cogollero: "", otraPlaga: "", otraPlagaCantidad: "", enfermedades: [], malezas: [], estresHidrico: 0, danoHerbicida: false, danoGranizo: false, observaciones: "", recomendaciones: "" }));
   };
 
   if (step === "success") return (
