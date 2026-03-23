@@ -93,7 +93,6 @@ const EMPRESAS = [
   ]},
   { empresa: "BERTOLI VARRONE", campos: [
     { campo: "TIERRAS DEL OESTE", lotes: ["TIERRAS DEL OESTE 1","TIERRAS DEL OESTE 3-5","TIERRAS DEL OESTE 4-6","TIERRAS DEL OESTE 7","TIERRAS DEL OESTE 8-11-12","TIERRAS DEL OESTE 9","TIERRAS DEL OESTE 10","TIERRAS DEL OESTE 13","TIERRAS DEL OESTE 14","TIERRAS DEL OESTE 15","EL QUEBRACHO"] },
-    { campo: "TIERRAS DEL OESTE PUPI", lotes: ["LINARES GIANFRANCO BERTOLI"] },
     { campo: "LA GRATITUD", lotes: ["LA GRATITUD"] },
     { campo: "LA PIAMONTESA", lotes: ["PIAMONTESA LP1","LA PIAMONTESA LP2"] },
     { campo: "LA JUANITA", lotes: ["LA JUANITA LJ1","LA JUANITA LJ2","LA JUANITA LJ3"] },
@@ -118,6 +117,9 @@ const EMPRESAS = [
   { empresa: "GOROSITO/SIGOTO/BERTOLI", campos: [
     { campo: "EL OCASO", lotes: ["OCASO LOTE 1 ESTE","OCASO LOTE 2 OESTE"] },
   ]},
+  { empresa: "GIANFRANCO BERTOLI", campos: [
+    { campo: "TIERRAS DEL OESTE PUPI", lotes: ["LINARES GIANFRANCO BERTOLI"] },
+  ]},
   { empresa: "VACHETTA", campos: [
     { campo: "DON ALBINO", lotes: ["VACHETTA LOTE 1","VACHETTA LOTE 2"] },
   ]},
@@ -129,7 +131,6 @@ const CULTIVOS = ["Maíz", "Soja", "Trigo", "Girasol", "Sorgo", "Maní", "Otro"]
 const ENFERMEDADES = ["Roya", "Mancha marrón", "Tizón", "Podredumbre", "Fusarium", "Esclerotinia", "Carbón", "Otra"];
 const ENFERMEDADES_RAIZ = ["Podredumbre radicular", "Pythium", "Rhizoctonia", "Fusarium raíz", "Otra"];
 const MALEZAS = ["Sorgo de alepo", "Gramón", "Ciperácea", "Verdolaga", "Yuyo colorado", "Rama negra", "Capín", "Otra"];
-const HUMEDAD_SUELO = ["Muy seco", "Seco", "Normal", "Húmedo", "Muy húmedo"];
 
 const inputBase = {
   width: "100%", background: C.inputBg, border: `1.5px solid ${C.border}`,
@@ -150,6 +151,48 @@ const SECTION = ({ title, icon, children, accent }) => (
 const Label = ({ children }) => (
   <div style={{ fontFamily: SANS, fontSize: 12, color: C.textDim, fontWeight: 600, marginBottom: 5, marginTop: 2, letterSpacing: 0.3 }}>{children}</div>
 );
+
+const CustomSelect = ({ label, value, onChange, options, disabled, placeholder }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <Label>{label}</Label>
+      <div
+        onClick={() => !disabled && setOpen(!open)}
+        style={{
+          ...inputBase, display: "flex", justifyContent: "space-between", alignItems: "center",
+          cursor: disabled ? "not-allowed" : "pointer",
+          opacity: disabled ? 0.5 : 1,
+          border: `1.5px solid ${value ? C.accent : C.border}`,
+          color: value ? C.text : C.textFaint,
+        }}
+      >
+        <span>{value || placeholder}</span>
+        <span style={{ fontSize: 12, color: C.textFaint }}>{open ? "▲" : "▼"}</span>
+      </div>
+      {open && (
+        <div style={{
+          background: C.surface, border: `1.5px solid ${C.accent}`,
+          borderRadius: 10, marginTop: 4, maxHeight: 220, overflowY: "auto",
+          zIndex: 999, position: "relative", boxShadow: "0 4px 20px rgba(0,0,0,0.15)"
+        }}>
+          {options.map(opt => (
+            <div key={opt} onClick={() => { onChange(opt); setOpen(false); }}
+              style={{
+                padding: "13px 16px", fontFamily: SANS, fontSize: 14,
+                color: opt === value ? C.accent : C.text,
+                background: opt === value ? C.accentLight : "transparent",
+                borderBottom: `1px solid ${C.border}40`,
+                fontWeight: opt === value ? 700 : 400,
+              }}>
+              {opt}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const NumInput = ({ label, unit, value, onChange, placeholder = "0" }) => (
   <div style={{ flex: 1 }}>
@@ -207,122 +250,6 @@ const StarRating = ({ value, onChange, label }) => (
   </div>
 );
 
-const ChipSelect = ({ options, value, onChange }) => (
-  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-    {options.map(opt => {
-      const active = value === opt;
-      return (
-        <div key={opt} onClick={() => onChange(active ? "" : opt)}
-          style={{ padding: "7px 14px", borderRadius: 20, border: `1.5px solid ${active ? C.accent : C.border}`, background: active ? C.accentLight : C.inputBg, fontFamily: SANS, fontSize: 13, color: active ? C.accentDark : C.textDim, cursor: "pointer", fontWeight: active ? 600 : 400, transition: "all 0.15s" }}>
-          {opt}
-        </div>
-      );
-    })}
-  </div>
-);
-
-const PlagaRow = ({ title, scientific, children, last }) => (
-  <div style={{ paddingBottom: 14, marginBottom: last ? 0 : 14, borderBottom: last ? "none" : `1px solid ${C.border}` }}>
-    <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: C.text, marginBottom: scientific ? 2 : 8 }}>{title}</div>
-    {scientific && <div style={{ fontFamily: SANS, fontSize: 11, color: C.textFaint, marginBottom: 8, fontStyle: "italic" }}>{scientific}</div>}
-    {children}
-  </div>
-);
-
-export default function App() {
-  const [step, setStep] = useState("form");
-  const [photos, setPhotos] = useState([]);
-  const [gps, setGps] = useState(null);
-  const [gpsLoading, setGpsLoading] = useState(false);
-  const [firma, setFirma] = useState("");
-  const [firmaActiva, setFirmaActiva] = useState(false);
-  const [pendingCount, setPendingCount] = useState(0);
-  const [syncing, setSyncing] = useState(false);
-  const fileRef = useRef();
-  const canvasRef = useRef();
-  const drawing = useRef(false);
-
-  // Sync on mount and when online
-  useEffect(() => {
-    setPendingCount(getQueue().length);
-    const trySync = async () => {
-      if (!navigator.onLine) return;
-      setSyncing(true);
-      const sent = await syncQueue();
-      setPendingCount(getQueue().length);
-      setSyncing(false);
-    };
-    trySync();
-    window.addEventListener("online", trySync);
-    return () => window.removeEventListener("online", trySync);
-  }, []);
-
-  const [data, setData] = useState({
-    empresa: "", campo: "", lote: "", cultivo: "",
-    fecha: new Date().toISOString().split("T")[0],
-    hora: new Date().toTimeString().slice(0, 5),
-    estacionMuestreo: "",
-    plantasPorMetro: "", distanciaEntresurco: "", estadioFenologico: "",
-    alturaPlanta: "", cobertura: "",
-    vuelco: false, acame: false,
-    isocas: "", isocasDano: "",
-    chinches: "", chinchesDano: "",
-    pulgones: "", pulgonesDano: "",
-    trips: "", tripsDano: "",
-    tripsFlor: "", tripsFlorDano: "",
-    aranhuelas: "", aranhuelasDano: "",
-    chicharrita: "", chicharritaDano: "",
-    barrenador: "", barrenadorDano: "",
-    cogollero: "", cogolleroDano: "",
-    moscaBlanca: "", moscaBlancaDano: "",
-    otraPlaga: "", otraPlagaCantidad: "",
-    enfermedades: [], enfermedadIntensidad: 0, enfermedadNota: "",
-    enfermedadesRaiz: [], enfermedadRaizIntensidad: 0, enfermedadRaizNota: "",
-    malezas: [], malezaCobertura: "", malezaNota: "",
-    estresHidrico: 0,
-    danoHerbicida: false, danoHerbicidaNota: "",
-    danoGranizo: false, danoGranizoNota: "",
-    humedadSuelo: "",
-    observaciones: "", recomendaciones: "",
-  });
-
-  const set = (key, val) => setData(p => ({ ...p, [key]: val }));
-
-  const getGPS = () => {
-    setGpsLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      pos => { setGps({ lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6), acc: Math.round(pos.coords.accuracy) }); setGpsLoading(false); },
-      () => { setGps({ error: true }); setGpsLoading(false); },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  };
-
-  const handlePhotos = (e) => {
-    Array.from(e.target.files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (ev) => setPhotos(p => [...p, { name: file.name, url: ev.target.result }]);
-      reader.readAsDataURL(file);
-    });
-  };
-
-  useEffect(() => {
-    if (!firmaActiva || !canvasRef.current) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    ctx.strokeStyle = C.accent; ctx.lineWidth = 2.5; ctx.lineCap = "round"; ctx.lineJoin = "round";
-    const getPos = (e) => { const r = canvas.getBoundingClientRect(); const src = e.touches ? e.touches[0] : e; return { x: src.clientX - r.left, y: src.clientY - r.top }; };
-    const start = (e) => { e.preventDefault(); drawing.current = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
-    const move = (e) => { e.preventDefault(); if (!drawing.current) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); };
-    const end = () => { drawing.current = false; setFirma(canvas.toDataURL()); };
-    canvas.addEventListener("mousedown", start); canvas.addEventListener("mousemove", move); canvas.addEventListener("mouseup", end);
-    canvas.addEventListener("touchstart", start, { passive: false }); canvas.addEventListener("touchmove", move, { passive: false }); canvas.addEventListener("touchend", end);
-    return () => {
-      canvas.removeEventListener("mousedown", start); canvas.removeEventListener("mousemove", move); canvas.removeEventListener("mouseup", end);
-      canvas.removeEventListener("touchstart", start); canvas.removeEventListener("touchmove", move); canvas.removeEventListener("touchend", end);
-    };
-  }, [firmaActiva]);
-
-  const clearFirma = () => { if (canvasRef.current) { canvasRef.current.getContext("2d").clearRect(0, 0, canvasRef.current.width, canvasRef.current.height); } setFirma(""); };
 
   const canSubmit = data.empresa && data.campo && data.lote && data.cultivo;
 
@@ -384,10 +311,8 @@ export default function App() {
         dano_herbicida_nota: data.danoHerbicidaNota || null,
         dano_granizo: data.danoGranizo,
         dano_granizo_nota: data.danoGranizoNota || null,
-        humedad_suelo: data.humedadSuelo || null,
         observaciones: data.observaciones || null,
         recomendaciones: data.recomendaciones || null,
-        firma_digital: !!firma,
         fotos_count: photos.length,
       };
       if (navigator.onLine) {
@@ -415,7 +340,7 @@ export default function App() {
 
   const reset = () => {
     setStep("form"); setPhotos([]); setGps(null); setFirma(""); setFirmaActiva(false);
-    setData(p => ({ ...p, empresa: "", campo: "", lote: "", cultivo: "", estacionMuestreo: "", plantasPorMetro: "", alturaPlanta: "", cobertura: "", vuelco: false, acame: false, isocas: "", chinches: "", pulgones: "", trips: "", tripsFlor: "", aranhuelas: "", chicharrita: "", barrenador: "", cogollero: "", moscaBlanca: "", otraPlaga: "", otraPlagaCantidad: "", enfermedades: [], enfermedadesRaiz: [], malezas: [], estresHidrico: 0, danoHerbicida: false, danoGranizo: false, humedadSuelo: "", observaciones: "", recomendaciones: "" }));
+    setData(p => ({ ...p, empresa: "", campo: "", lote: "", cultivo: "", estacionMuestreo: "", plantasPorMetro: "", cobertura: "", vuelco: false, isocas: "", chinches: "", pulgones: "", trips: "", aranhuelas: "", chicharrita: "", barrenador: "", cogollero: "", moscaBlanca: "", otraPlaga: "", otraPlagaCantidad: "", enfermedades: [], malezas: [], estresHidrico: 0, danoHerbicida: false, danoGranizo: false, observaciones: "", recomendaciones: "" }));
   };
 
   if (step === "success") return (
@@ -429,7 +354,7 @@ export default function App() {
       <div style={{ fontSize: 13, color: C.textFaint, marginBottom: 4 }}>{data.cultivo}{data.estacionMuestreo ? ` · Estación ${data.estacionMuestreo}` : ""}</div>
       <div style={{ fontSize: 13, color: C.textFaint, marginBottom: 4 }}>{data.fecha} · {data.hora}</div>
       {gps && !gps.error && <div style={{ fontSize: 12, color: C.textFaint, marginBottom: 4 }}>📍 {gps.lat}, {gps.lng}</div>}
-      <div style={{ fontSize: 13, color: C.textFaint, marginBottom: 12 }}>{photos.length} foto{photos.length !== 1 ? "s" : ""}{firma ? " · Firmado ✓" : ""}</div>
+      <div style={{ fontSize: 13, color: C.textFaint, marginBottom: 12 }}>{photos.length} foto{photos.length !== 1 ? "s" : ""}</div>
       {pendingCount > 0
         ? <div style={{ background: C.warnLight, border: `1px solid ${C.warn}40`, borderRadius: 10, padding: "10px 18px", marginBottom: 24, fontSize: 13, color: C.warn, textAlign: "center" }}>📡 Sin señal — guardado en el dispositivo<br /><span style={{ fontSize: 12 }}>{pendingCount} monitoreo{pendingCount > 1 ? "s" : ""} pendiente{pendingCount > 1 ? "s" : ""} de envío</span></div>
         : <div style={{ background: C.accentLight, border: `1px solid ${C.accent}30`, borderRadius: 10, padding: "10px 18px", marginBottom: 24, fontSize: 13, color: C.accentDark, textAlign: "center" }}>✓ Enviado a Supabase</div>
@@ -488,34 +413,38 @@ export default function App() {
       <div style={{ padding: "16px 14px 120px" }}>
 
         <SECTION title="IDENTIFICACIÓN" icon="📍" accent>
-          <div style={{ marginBottom: 12 }}>
-            <Label>Empresa *</Label>
-            <select value={data.empresa} onChange={e => { set("empresa", e.target.value); set("campo", ""); set("lote", ""); }} style={{ ...inputBase, border: `1.5px solid ${data.empresa ? C.accent : C.border}`, color: data.empresa ? C.text : C.textFaint }}>
-              <option value="">Seleccionar empresa...</option>
-              {EMPRESAS.map(e => <option key={e.empresa} value={e.empresa}>{e.empresa}</option>)}
-            </select>
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <Label>Campo *</Label>
-            <select value={data.campo} onChange={e => { set("campo", e.target.value); set("lote", ""); }} disabled={!data.empresa} style={{ ...inputBase, border: `1.5px solid ${data.campo ? C.accent : C.border}`, color: data.campo ? C.text : C.textFaint, opacity: data.empresa ? 1 : 0.5 }}>
-              <option value="">{data.empresa ? "Seleccionar campo..." : "Primero seleccioná la empresa"}</option>
-              {data.empresa && EMPRESAS.find(e => e.empresa === data.empresa)?.campos.map(c => <option key={c.campo} value={c.campo}>{c.campo}</option>)}
-            </select>
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <Label>Lote *</Label>
-            <select value={data.lote} onChange={e => set("lote", e.target.value)} disabled={!data.campo} style={{ ...inputBase, border: `1.5px solid ${data.lote ? C.accent : C.border}`, color: data.lote ? C.text : C.textFaint, opacity: data.campo ? 1 : 0.5 }}>
-              <option value="">{data.campo ? "Seleccionar lote..." : "Primero seleccioná el campo"}</option>
-              {data.campo && EMPRESAS.find(e => e.empresa === data.empresa)?.campos.find(c => c.campo === data.campo)?.lotes.map(l => <option key={l} value={l}>{l}</option>)}
-            </select>
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <Label>Cultivo que está monitoreando *</Label>
-            <select value={data.cultivo} onChange={e => set("cultivo", e.target.value)} style={{ ...inputBase, border: `1.5px solid ${data.cultivo ? C.accent : C.border}`, color: data.cultivo ? C.text : C.textFaint }}>
-              <option value="">Seleccionar cultivo...</option>
-              {CULTIVOS.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
+          <CustomSelect
+            label="Empresa *"
+            value={data.empresa}
+            onChange={v => { set("empresa", v); set("campo", ""); set("lote", ""); }}
+            options={EMPRESAS.map(e => e.empresa)}
+            placeholder="Seleccionar empresa..."
+          />
+          {data.empresa && (
+            <CustomSelect
+              label="Campo *"
+              value={data.campo}
+              onChange={v => { set("campo", v); set("lote", ""); }}
+              options={EMPRESAS.find(e => e.empresa === data.empresa)?.campos.map(c => c.campo) || []}
+              placeholder="Seleccionar campo..."
+            />
+          )}
+          {data.campo && (
+            <CustomSelect
+              label="Lote *"
+              value={data.lote}
+              onChange={v => set("lote", v)}
+              options={EMPRESAS.find(e => e.empresa === data.empresa)?.campos.find(c => c.campo === data.campo)?.lotes || []}
+              placeholder="Seleccionar lote..."
+            />
+          )}
+          <CustomSelect
+            label="Cultivo que está monitoreando *"
+            value={data.cultivo}
+            onChange={v => set("cultivo", v)}
+            options={CULTIVOS}
+            placeholder="Seleccionar cultivo..."
+          />
           <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
             <div style={{ flex: 1 }}><Label>Fecha</Label><input type="date" value={data.fecha} onChange={e => set("fecha", e.target.value)} style={{ ...inputBase, fontFamily: FONT, fontSize: 13 }} /></div>
             <div style={{ flex: 1 }}><Label>Hora</Label><input type="time" value={data.hora} onChange={e => set("hora", e.target.value)} style={{ ...inputBase, fontFamily: FONT, fontSize: 13 }} /></div>
@@ -539,7 +468,6 @@ export default function App() {
             <NumInput label="Entresurco" unit="cm" value={data.distanciaEntresurco} onChange={v => set("distanciaEntresurco", v)} />
           </div>
           <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-            <NumInput label="Altura de planta" unit="cm" value={data.alturaPlanta} onChange={v => set("alturaPlanta", v)} />
             <NumInput label="Cobertura canopeo" unit="%" value={data.cobertura} onChange={v => set("cobertura", v)} />
           </div>
           <div style={{ marginBottom: 12 }}>
@@ -547,7 +475,6 @@ export default function App() {
             <input type="text" placeholder="Ej: V6, R1, espigazón..." value={data.estadioFenologico} onChange={e => set("estadioFenologico", e.target.value)} style={inputBase} />
           </div>
           <Toggle label="Presencia de vuelco" value={data.vuelco} onChange={v => set("vuelco", v)} />
-          <Toggle label="Presencia de acame" value={data.acame} onChange={v => set("acame", v)} noBorder />
         </SECTION>
 
         <SECTION title="PLAGAS" icon="🦗">
@@ -562,7 +489,6 @@ export default function App() {
           </PlagaRow>
           <PlagaRow title="Trips">
             <div style={{ display: "flex", gap: 10, marginBottom: 10 }}><NumInput label="Cantidad / hoja" unit="/hoja" value={data.trips} onChange={v => set("trips", v)} /><NumInput label="% plantas afect." unit="%" value={data.tripsDano} onChange={v => set("tripsDano", v)} /></div>
-            <div style={{ display: "flex", gap: 10 }}><NumInput label="Trips en flor" unit="/flor" value={data.tripsFlor} onChange={v => set("tripsFlor", v)} /><NumInput label="% flores afect." unit="%" value={data.tripsFlorDano} onChange={v => set("tripsFlorDano", v)} /></div>
           </PlagaRow>
           <PlagaRow title="Arañuelas / Ácaros">
             <div style={{ display: "flex", gap: 10 }}><NumInput label="Focos detectados" value={data.aranhuelas} onChange={v => set("aranhuelas", v)} /><NumInput label="% hoja afectada" unit="%" value={data.aranhuelasDano} onChange={v => set("aranhuelasDano", v)} /></div>
@@ -570,14 +496,8 @@ export default function App() {
           <PlagaRow title="Chicharrita del maíz" scientific="Dalbulus maidis">
             <div style={{ display: "flex", gap: 10 }}><NumInput label="Adultos / planta" unit="/pl" value={data.chicharrita} onChange={v => set("chicharrita", v)} /><NumInput label="% plantas afect." unit="%" value={data.chicharritaDano} onChange={v => set("chicharritaDano", v)} /></div>
           </PlagaRow>
-          <PlagaRow title="Barrenador del tallo">
-            <div style={{ display: "flex", gap: 10 }}><NumInput label="Plantas afect. / m" unit="/m" value={data.barrenador} onChange={v => set("barrenador", v)} /><NumInput label="% daño tallo" unit="%" value={data.barrenadorDano} onChange={v => set("barrenadorDano", v)} /></div>
-          </PlagaRow>
           <PlagaRow title="Cogollero">
             <div style={{ display: "flex", gap: 10 }}><NumInput label="Larvas / planta" unit="/pl" value={data.cogollero} onChange={v => set("cogollero", v)} /><NumInput label="% plantas afect." unit="%" value={data.cogolleroDano} onChange={v => set("cogolleroDano", v)} /></div>
-          </PlagaRow>
-          <PlagaRow title="Mosca blanca">
-            <div style={{ display: "flex", gap: 10 }}><NumInput label="Adultos / hoja" unit="/hoja" value={data.moscaBlanca} onChange={v => set("moscaBlanca", v)} /><NumInput label="% plantas afect." unit="%" value={data.moscaBlancaDano} onChange={v => set("moscaBlancaDano", v)} /></div>
           </PlagaRow>
           <PlagaRow title="Otra plaga" last>
             <div style={{ display: "flex", gap: 10 }}>
@@ -593,12 +513,6 @@ export default function App() {
           <TextArea label="Observaciones" value={data.enfermedadNota} onChange={v => set("enfermedadNota", v)} placeholder="Zona afectada, síntomas, avance..." />
         </SECTION>
 
-        <SECTION title="ENFERMEDADES DE RAÍZ Y TALLO" icon="🌿">
-          <div style={{ marginBottom: 14 }}><Label>Patógenos detectados</Label><CheckGrid items={ENFERMEDADES_RAIZ} selected={data.enfermedadesRaiz} onChange={v => set("enfermedadesRaiz", v)} /></div>
-          {data.enfermedadesRaiz.length > 0 && <div style={{ marginBottom: 12 }}><StarRating label="Intensidad" value={data.enfermedadRaizIntensidad} onChange={v => set("enfermedadRaizIntensidad", v)} /></div>}
-          <TextArea label="Observaciones" value={data.enfermedadRaizNota} onChange={v => set("enfermedadRaizNota", v)} placeholder="Síntomas, profundidad, distribución..." />
-        </SECTION>
-
         <SECTION title="MALEZAS" icon="🌾">
           <div style={{ marginBottom: 14 }}><Label>Malezas presentes</Label><CheckGrid items={MALEZAS} selected={data.malezas} onChange={v => set("malezas", v)} /></div>
           {data.malezas.length > 0 && <div style={{ marginBottom: 12 }}><NumInput label="Cobertura estimada" unit="%" value={data.malezaCobertura} onChange={v => set("malezaCobertura", v)} /></div>}
@@ -611,11 +525,6 @@ export default function App() {
           {data.danoHerbicida && <div style={{ marginTop: 10, marginBottom: 10 }}><TextArea label="Descripción del daño" value={data.danoHerbicidaNota} onChange={v => set("danoHerbicidaNota", v)} placeholder="Tipo de síntoma, zona afectada, % plantas..." /></div>}
           <Toggle label="Daño por granizo" value={data.danoGranizo} onChange={v => set("danoGranizo", v)} noBorder={!data.danoGranizo} />
           {data.danoGranizo && <div style={{ marginTop: 10 }}><TextArea label="Descripción del daño" value={data.danoGranizoNota} onChange={v => set("danoGranizoNota", v)} placeholder="% daño estimado, órganos afectados..." /></div>}
-        </SECTION>
-
-        <SECTION title="SUELO" icon="🟫">
-          <Label>Humedad visual del suelo</Label>
-          <ChipSelect options={HUMEDAD_SUELO} value={data.humedadSuelo} onChange={v => set("humedadSuelo", v)} />
         </SECTION>
 
         <SECTION title="FOTOGRAFÍAS" icon="📷">
@@ -641,38 +550,13 @@ export default function App() {
           <TextArea label="Recomendaciones de manejo" value={data.recomendaciones} onChange={v => set("recomendaciones", v)} placeholder="Ej: Aplicar fungicida, repetir monitoreo en 7 días..." />
         </SECTION>
 
-        <SECTION title="FIRMA DIGITAL" icon="✍️">
-          {!firmaActiva && !firma && (
-            <button onClick={() => setFirmaActiva(true)} style={{ width: "100%", border: `2px dashed ${C.borderStrong}`, borderRadius: 12, background: C.inputBg, padding: "18px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 28 }}>✍️</span>
-              <span style={{ fontFamily: SANS, fontSize: 13, color: C.textDim }}>Tocar para firmar</span>
-            </button>
-          )}
-          {firmaActiva && (
-            <div>
-              <div style={{ fontSize: 12, color: C.textDim, fontFamily: SANS, marginBottom: 8 }}>Firmá con el dedo en el recuadro</div>
-              <canvas ref={canvasRef} width={370} height={120} style={{ width: "100%", height: 120, border: `1.5px solid ${C.accent}`, borderRadius: 10, background: "#fff", touchAction: "none", display: "block" }} />
-              <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-                <button onClick={clearFirma} style={{ flex: 1, background: C.inputBg, border: `1.5px solid ${C.border}`, borderRadius: 8, padding: 10, fontFamily: SANS, fontSize: 13, color: C.textDim, cursor: "pointer" }}>Borrar</button>
-                <button onClick={() => setFirmaActiva(false)} style={{ flex: 1, background: C.accentLight, border: `1.5px solid ${C.accent}`, borderRadius: 8, padding: 10, fontFamily: SANS, fontSize: 13, color: C.accentDark, fontWeight: 600, cursor: "pointer" }}>Confirmar firma</button>
-              </div>
-            </div>
-          )}
-          {!firmaActiva && firma && (
-            <div>
-              <img src={firma} alt="Firma" style={{ width: "100%", height: 80, objectFit: "contain", border: `1.5px solid ${C.accent}`, borderRadius: 10, background: "#fff" }} />
-              <button onClick={() => { clearFirma(); setFirmaActiva(true); }} style={{ marginTop: 8, width: "100%", background: C.inputBg, border: `1.5px solid ${C.border}`, borderRadius: 8, padding: 9, fontFamily: SANS, fontSize: 13, color: C.textDim, cursor: "pointer" }}>Volver a firmar</button>
-            </div>
-          )}
-        </SECTION>
-
       </div>
 
       <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: C.surface, borderTop: `1px solid ${C.border}`, padding: "14px 16px 24px", zIndex: 200 }}>
         {!canSubmit && <div style={{ fontFamily: SANS, fontSize: 12, color: C.warn, textAlign: "center", marginBottom: 10 }}>⚠ Completá Empresa, Campo, Lote y Cultivo para enviar</div>}
         <button onClick={handleSubmit} disabled={!canSubmit}
           style={{ width: "100%", border: "none", borderRadius: 14, padding: "16px", fontFamily: FONT, fontSize: 14, fontWeight: 700, letterSpacing: 2, cursor: canSubmit ? "pointer" : "not-allowed", background: canSubmit ? C.accent : C.border, color: canSubmit ? "#fff" : C.textFaint, transition: "all 0.2s" }}>
-          {`ENVIAR MONITOREO${photos.length > 0 ? ` · ${photos.length} FOTO${photos.length > 1 ? "S" : ""}` : ""}${firma ? " · FIRMADO ✓" : ""}`}
+          {`ENVIAR MONITOREO${photos.length > 0 ? ` · ${photos.length} FOTO${photos.length > 1 ? "S" : ""}` : ""}`}
         </button>
       </div>
     </div>
