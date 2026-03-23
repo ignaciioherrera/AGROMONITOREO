@@ -258,7 +258,20 @@ const StarRating = ({ value, onChange, label }) => (
   </div>
 );
 
-export default function App() {
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(e) { return { error: e.message }; }
+  render() {
+    if (this.state.error) return (
+      <div style={{ padding: 20, background: "#fff", color: "#c00", fontFamily: "monospace", fontSize: 12 }}>
+        <b>Error:</b> {this.state.error}
+      </div>
+    );
+    return this.props.children;
+  }
+}
+
+function AppInner() {
   const [step, setStep] = useState("form");
   const [photos, setPhotos] = useState([]);
   const [gps, setGps] = useState(null);
@@ -623,4 +636,8 @@ export default function App() {
       </div>
     </div>
   );
+}
+
+export default function App() {
+  return <ErrorBoundary><AppInner /></ErrorBoundary>;
 }
