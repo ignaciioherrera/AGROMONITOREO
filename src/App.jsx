@@ -250,6 +250,71 @@ const StarRating = ({ value, onChange, label }) => (
   </div>
 );
 
+export default function App() {
+  const [step, setStep] = useState("form");
+  const [photos, setPhotos] = useState([]);
+  const [gps, setGps] = useState(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [syncing, setSyncing] = useState(false);
+  const fileRef = useRef();
+
+  useEffect(() => {
+    setPendingCount(getQueue().length);
+    const trySync = async () => {
+      if (!navigator.onLine) return;
+      setSyncing(true);
+      const sent = await syncQueue();
+      setPendingCount(getQueue().length);
+      setSyncing(false);
+    };
+    trySync();
+    window.addEventListener("online", trySync);
+    return () => window.removeEventListener("online", trySync);
+  }, []);
+
+  const [data, setData] = useState({
+    empresa: "", campo: "", lote: "", cultivo: "",
+    fecha: new Date().toISOString().split("T")[0],
+    hora: new Date().toTimeString().slice(0, 5),
+    estacionMuestreo: "",
+    plantasPorMetro: "", distanciaEntresurco: "", estadioFenologico: "",
+    cobertura: "",
+    vuelco: false,
+    isocas: "", isocasDano: "",
+    chinches: "", chinchesDano: "",
+    pulgones: "", pulgonesDano: "",
+    trips: "", tripsDano: "",
+    aranhuelas: "", aranhuelasDano: "",
+    chicharrita: "", chicharritaDano: "",
+    cogollero: "", cogolleroDano: "",
+    otraPlaga: "", otraPlagaCantidad: "",
+    enfermedades: [], enfermedadIntensidad: 0, enfermedadNota: "",
+    malezas: [], malezaCobertura: "", malezaNota: "",
+    estresHidrico: 0,
+    danoHerbicida: false, danoHerbicidaNota: "",
+    danoGranizo: false, danoGranizoNota: "",
+    observaciones: "", recomendaciones: "",
+  });
+
+  const set = (key, val) => setData(p => ({ ...p, [key]: val }));
+
+  const getGPS = () => {
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      pos => { setGps({ lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6), acc: Math.round(pos.coords.accuracy) }); setGpsLoading(false); },
+      () => { setGps({ error: true }); setGpsLoading(false); },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const handlePhotos = (e) => {
+    Array.from(e.target.files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => setPhotos(p => [...p, { name: file.name, url: ev.target.result }]);
+      reader.readAsDataURL(file);
+    });
+  };
 
   const canSubmit = data.empresa && data.campo && data.lote && data.cultivo;
 
