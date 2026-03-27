@@ -235,7 +235,7 @@ const EMPRESAS = [
 const CAMPOS = EMPRESAS.flatMap(e => e.campos.map(c => ({ ...c, empresa: e.empresa })));
 const LOTES = CAMPOS.flatMap(c => c.lotes);
 
-const CULTIVOS = ["Maíz", "Soja", "Trigo", "Girasol", "Sorgo", "Maní", "Otro"];
+const CULTIVOS = ["Maíz", "Soja", "Trigo", "Girasol", "Sorgo", "Otro"];
 const ENFERMEDADES = ["Roya", "Mancha marrón", "Tizón", "Podredumbre", "Fusarium", "Esclerotinia", "Carbón", "Otra"];
 const MALEZAS = ["Sorgo de alepo", "Gramón", "Ciperácea", "Verdolaga", "Yuyo colorado", "Rama negra", "Capín", "Otra"];
 
@@ -243,39 +243,28 @@ const MALEZAS = ["Sorgo de alepo", "Gramón", "Ciperácea", "Verdolaga", "Yuyo c
 const PLANTILLAS_CULTIVO = {
   "Maíz": {
     estadios: ["V1","V2","V3","V4","V5","V6","V7","V8","V9","V10","V12","VT","R1","R2","R3","R4","R5","R6"],
-    plagasRelevantes: ["isocas","chinches","cogollero","chicharrita","trips"],
+    plagasRelevantes: ["cogollero","chicharrita","chinches","aranhuelas"],
     enfermedadesRelevantes: ["Roya","Tizón","Carbón","Fusarium","Otra"],
-    notaDefault: "",
   },
   "Soja": {
     estadios: ["V1","V2","V3","V4","V5","V6","R1","R2","R3","R4","R5","R6","R7","R8"],
-    plagasRelevantes: ["isocas","chinches","pulgones","trips","aranhuelas"],
-    enfermedadesRelevantes: ["Roya","Mancha marrón","Podredumbre","Esclerotinia","Otra"],
-    notaDefault: "",
+    plagasRelevantes: ["isocas","chinches","pulgones","trips","aranhuelas","caracol"],
+    enfermedadesRelevantes: ["Roya","Septoria","Cercospora Kukichi","Muerte súbita","Otra"],
   },
   "Trigo": {
     estadios: ["Macollaje","Encañazón","Espigazón","Antesis","Grano lechoso","Grano pastoso","Madurez"],
     plagasRelevantes: ["pulgones","trips","aranhuelas"],
     enfermedadesRelevantes: ["Roya","Tizón","Fusarium","Otra"],
-    notaDefault: "",
   },
   "Girasol": {
     estadios: ["V2","V4","V6","V8","R1","R3","R5","R7","R9"],
-    plagasRelevantes: ["isocas","chinches","trips"],
-    enfermedadesRelevantes: ["Podredumbre","Esclerotinia","Otra"],
-    notaDefault: "",
+    plagasRelevantes: ["isocas","chinches","aranhuelas"],
+    enfermedadesRelevantes: ["Roya","Otra"],
   },
   "Sorgo": {
     estadios: ["V3","V6","V9","Panojamiento","Floración","Grano lechoso","Madurez"],
-    plagasRelevantes: ["isocas","pulgones","cogollero","chicharrita"],
-    enfermedadesRelevantes: ["Carbón","Fusarium","Otra"],
-    notaDefault: "",
-  },
-  "Maní": {
-    estadios: ["V1","V3","V5","R1","R3","R5","R7","R8"],
-    plagasRelevantes: ["isocas","trips","aranhuelas"],
-    enfermedadesRelevantes: ["Podredumbre","Tizón","Otra"],
-    notaDefault: "",
+    plagasRelevantes: ["cogollero","pulgones"],
+    enfermedadesRelevantes: [],
   },
 };
 
@@ -509,6 +498,7 @@ function AppInner({ session, onLogout }) {
     chicharrita: "", chicharritaDano: "",
     cogollero: "", cogolleroDano: "",
     otraPlaga: "", otraPlagaCantidad: "",
+    caracol: "", caracolDano: "",
     enfermedades: [], enfermedadIntensidad: 0, enfermedadNota: "",
     malezas: [], malezaCobertura: "", malezaNota: "",
     estresHidrico: 0,
@@ -641,6 +631,8 @@ function AppInner({ session, onLogout }) {
         cogollero_dano: data.cogolleroDano ? parseFloat(data.cogolleroDano) : null,
         otra_plaga: data.otraPlaga || null,
         otra_plaga_cantidad: data.otraPlagaCantidad ? parseFloat(data.otraPlagaCantidad) : null,
+        caracol: data.caracol ? parseFloat(data.caracol) : null,
+        caracol_dano: data.caracolDano ? parseFloat(data.caracolDano) : null,
         enfermedades: data.enfermedades.length > 0 ? data.enfermedades : null,
         enfermedad_intensidad: data.enfermedadIntensidad || null,
         enfermedad_nota: data.enfermedadNota || null,
@@ -685,7 +677,7 @@ function AppInner({ session, onLogout }) {
   const reset = () => {
     setStep("form"); setPhotos([]); setGps(null);
     // Mantiene empresa, campo y fecha para seguir la jornada — solo limpia lote y datos
-    setData(p => ({ ...p, lote: "", cultivo: "", estacionMuestreo: "", plantasPorMetro: "", distanciaEntresurco: "", estadioFenologico: "", cobertura: "", vuelco: false, isocas: "", isocasDano: "", chinches: "", chinchesDano: "", pulgones: "", pulgonesDano: "", trips: "", tripsDano: "", aranhuelas: "", aranhuelasDano: "", chicharrita: "", chicharritaDano: "", cogollero: "", cogolleroDano: "", otraPlaga: "", otraPlagaCantidad: "", enfermedades: [], enfermedadIntensidad: 0, enfermedadNota: "", malezas: [], malezaCobertura: "", malezaNota: "", estresHidrico: 0, danoHerbicida: false, danoHerbicidaNota: "", danoGranizo: false, danoGranizoNota: "", observaciones: "", recomendaciones: "" }));
+    setData(p => ({ ...p, lote: "", cultivo: "", estacionMuestreo: "", plantasPorMetro: "", distanciaEntresurco: "", estadioFenologico: "", cobertura: "", vuelco: false, isocas: "", isocasDano: "", chinches: "", chinchesDano: "", pulgones: "", pulgonesDano: "", trips: "", tripsDano: "", aranhuelas: "", aranhuelasDano: "", chicharrita: "", chicharritaDano: "", cogollero: "", cogolleroDano: "", caracol: "", caracolDano: "", otraPlaga: "", otraPlagaCantidad: "", enfermedades: [], enfermedadIntensidad: 0, enfermedadNota: "", malezas: [], malezaCobertura: "", malezaNota: "", estresHidrico: 0, danoHerbicida: false, danoHerbicidaNota: "", danoGranizo: false, danoGranizoNota: "", observaciones: "", recomendaciones: "" }));
     setHistorial([]); setMostrarHistorial(false);
   };
 
@@ -1042,41 +1034,81 @@ function AppInner({ session, onLogout }) {
           <Toggle label="Presencia de vuelco" value={data.vuelco} onChange={v => set("vuelco", v)} />
         </SECTION>
 
-        <SECTION title="PLAGAS" icon="🦗">
-          <PlagaRow title="Isocas / Orugas">
-            <div style={{ display: "flex", gap: 10 }}><NumInput label="Cantidad / metro" unit="/m" value={data.isocas} onChange={v => set("isocas", v)} /><NumInput label="% defoliación" unit="%" value={data.isocasDano} onChange={v => set("isocasDano", v)} /></div>
-          </PlagaRow>
-          <PlagaRow title="Chinches">
-            <div style={{ display: "flex", gap: 10 }}><NumInput label="Adultos / metro" unit="/m" value={data.chinches} onChange={v => set("chinches", v)} /><NumInput label="Ninfas / metro" unit="/m" value={data.chinchesDano} onChange={v => set("chinchesDano", v)} /></div>
-          </PlagaRow>
-          <PlagaRow title="Pulgones">
-            <div style={{ display: "flex", gap: 10 }}><NumInput label="Colonias / planta" unit="/pl" value={data.pulgones} onChange={v => set("pulgones", v)} /><NumInput label="% plantas afect." unit="%" value={data.pulgonesDano} onChange={v => set("pulgonesDano", v)} /></div>
-          </PlagaRow>
-          <PlagaRow title="Trips">
-            <div style={{ display: "flex", gap: 10, marginBottom: 10 }}><NumInput label="Cantidad / hoja" unit="/hoja" value={data.trips} onChange={v => set("trips", v)} /><NumInput label="% plantas afect." unit="%" value={data.tripsDano} onChange={v => set("tripsDano", v)} /></div>
-          </PlagaRow>
-          <PlagaRow title="Arañuelas / Ácaros">
-            <div style={{ display: "flex", gap: 10 }}><NumInput label="Focos detectados" value={data.aranhuelas} onChange={v => set("aranhuelas", v)} /><NumInput label="% hoja afectada" unit="%" value={data.aranhuelasDano} onChange={v => set("aranhuelasDano", v)} /></div>
-          </PlagaRow>
-          <PlagaRow title="Chicharrita del maíz" scientific="Dalbulus maidis">
-            <div style={{ display: "flex", gap: 10 }}><NumInput label="Adultos / planta" unit="/pl" value={data.chicharrita} onChange={v => set("chicharrita", v)} /><NumInput label="% plantas afect." unit="%" value={data.chicharritaDano} onChange={v => set("chicharritaDano", v)} /></div>
-          </PlagaRow>
-          <PlagaRow title="Cogollero">
-            <div style={{ display: "flex", gap: 10 }}><NumInput label="Larvas / planta" unit="/pl" value={data.cogollero} onChange={v => set("cogollero", v)} /><NumInput label="% plantas afect." unit="%" value={data.cogolleroDano} onChange={v => set("cogolleroDano", v)} /></div>
-          </PlagaRow>
-          <PlagaRow title="Otra plaga" last>
-            <div style={{ display: "flex", gap: 10 }}>
-              <div style={{ flex: 2 }}><Label>Nombre</Label><input type="text" placeholder="Describir..." value={data.otraPlaga} onChange={e => set("otraPlaga", e.target.value)} style={inputBase} /></div>
-              <NumInput label="Cantidad" value={data.otraPlagaCantidad} onChange={v => set("otraPlagaCantidad", v)} />
-            </div>
-          </PlagaRow>
-        </SECTION>
+        {(() => {
+          const plantilla = getPlantilla(data.cultivo);
+          const relevantes = plantilla?.plagasRelevantes || ["isocas","chinches","pulgones","chicharrita","trips","aranhuelas","cogollero"];
+          const mostrar = (key) => !data.cultivo || relevantes.includes(key);
+          const enfermedadesRelevantes = plantilla?.enfermedadesRelevantes || ENFERMEDADES;
 
-        <SECTION title="ENFERMEDADES FOLIARES" icon="🦠">
-          <div style={{ marginBottom: 14 }}><Label>Enfermedades detectadas</Label><CheckGrid items={ENFERMEDADES} selected={data.enfermedades} onChange={v => set("enfermedades", v)} /></div>
-          {data.enfermedades.length > 0 && <div style={{ marginBottom: 12 }}><StarRating label="Intensidad / severidad" value={data.enfermedadIntensidad} onChange={v => set("enfermedadIntensidad", v)} /></div>}
-          <TextArea label="Observaciones" value={data.enfermedadNota} onChange={v => set("enfermedadNota", v)} placeholder="Zona afectada, síntomas, avance..." />
-        </SECTION>
+          return (
+            <>
+              <SECTION title="PLAGAS" icon="🦗">
+                {/* Indicador de cultivo filtrado */}
+                {data.cultivo && plantilla && (
+                  <div style={{ fontSize: 11, color: C.accent, fontFamily: FONT, marginBottom: 12, background: C.accentLight, borderRadius: 8, padding: "6px 10px", display: "flex", alignItems: "center", gap: 6 }}>
+                    <span>🌱</span>
+                    <span>Plagas relevantes para <b>{data.cultivo}</b> · {relevantes.length} de 7</span>
+                  </div>
+                )}
+                {mostrar("isocas") && (
+                  <PlagaRow title="Isocas / Orugas">
+                    <div style={{ display: "flex", gap: 10 }}><NumInput label="Cantidad / metro" unit="/m" value={data.isocas} onChange={v => set("isocas", v)} /><NumInput label="% defoliación" unit="%" value={data.isocasDano} onChange={v => set("isocasDano", v)} /></div>
+                  </PlagaRow>
+                )}
+                {mostrar("chinches") && (
+                  <PlagaRow title="Chinches">
+                    <div style={{ display: "flex", gap: 10 }}><NumInput label="Adultos / metro" unit="/m" value={data.chinches} onChange={v => set("chinches", v)} /><NumInput label="Ninfas / metro" unit="/m" value={data.chinchesDano} onChange={v => set("chinchesDano", v)} /></div>
+                  </PlagaRow>
+                )}
+                {mostrar("pulgones") && (
+                  <PlagaRow title="Pulgones">
+                    <div style={{ display: "flex", gap: 10 }}><NumInput label="Colonias / planta" unit="/pl" value={data.pulgones} onChange={v => set("pulgones", v)} /><NumInput label="% plantas afect." unit="%" value={data.pulgonesDano} onChange={v => set("pulgonesDano", v)} /></div>
+                  </PlagaRow>
+                )}
+                {mostrar("trips") && (
+                  <PlagaRow title="Trips">
+                    <div style={{ display: "flex", gap: 10 }}><NumInput label="Cantidad / hoja" unit="/hoja" value={data.trips} onChange={v => set("trips", v)} /><NumInput label="% plantas afect." unit="%" value={data.tripsDano} onChange={v => set("tripsDano", v)} /></div>
+                  </PlagaRow>
+                )}
+                {mostrar("aranhuelas") && (
+                  <PlagaRow title="Arañuelas / Ácaros">
+                    <div style={{ display: "flex", gap: 10 }}><NumInput label="Focos detectados" value={data.aranhuelas} onChange={v => set("aranhuelas", v)} /><NumInput label="% hoja afectada" unit="%" value={data.aranhuelasDano} onChange={v => set("aranhuelasDano", v)} /></div>
+                  </PlagaRow>
+                )}
+                {mostrar("caracol") && (
+                  <PlagaRow title="Caracol / Babosa">
+                    <div style={{ display: "flex", gap: 10 }}><NumInput label="Individuos / m²" unit="/m²" value={data.caracol} onChange={v => set("caracol", v)} /><NumInput label="% plantas afect." unit="%" value={data.caracolDano} onChange={v => set("caracolDano", v)} /></div>
+                  </PlagaRow>
+                )}
+                {mostrar("chicharrita") && (
+                  <PlagaRow title="Chicharrita del maíz" scientific="Dalbulus maidis">
+                    <div style={{ display: "flex", gap: 10 }}><NumInput label="Adultos / planta" unit="/pl" value={data.chicharrita} onChange={v => set("chicharrita", v)} /><NumInput label="% plantas afect." unit="%" value={data.chicharritaDano} onChange={v => set("chicharritaDano", v)} /></div>
+                  </PlagaRow>
+                )}
+                {mostrar("cogollero") && (
+                  <PlagaRow title="Cogollero">
+                    <div style={{ display: "flex", gap: 10 }}><NumInput label="Larvas / planta" unit="/pl" value={data.cogollero} onChange={v => set("cogollero", v)} /><NumInput label="% plantas afect." unit="%" value={data.cogolleroDano} onChange={v => set("cogolleroDano", v)} /></div>
+                  </PlagaRow>
+                )}
+                <PlagaRow title="Otra plaga" last>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <div style={{ flex: 2 }}><Label>Nombre</Label><input type="text" placeholder="Describir..." value={data.otraPlaga} onChange={e => set("otraPlaga", e.target.value)} style={inputBase} /></div>
+                    <NumInput label="Cantidad" value={data.otraPlagaCantidad} onChange={v => set("otraPlagaCantidad", v)} />
+                  </div>
+                </PlagaRow>
+              </SECTION>
+
+              <SECTION title="ENFERMEDADES FOLIARES" icon="🦠">
+                <div style={{ marginBottom: 14 }}>
+                  <Label>Enfermedades detectadas</Label>
+                  <CheckGrid items={enfermedadesRelevantes} selected={data.enfermedades} onChange={v => set("enfermedades", v)} />
+                </div>
+                {data.enfermedades.length > 0 && <div style={{ marginBottom: 12 }}><StarRating label="Intensidad / severidad" value={data.enfermedadIntensidad} onChange={v => set("enfermedadIntensidad", v)} /></div>}
+                <TextArea label="Observaciones" value={data.enfermedadNota} onChange={v => set("enfermedadNota", v)} placeholder="Zona afectada, síntomas, avance..." />
+              </SECTION>
+            </>
+          );
+        })()}
 
         <SECTION title="MALEZAS" icon="🌾">
           <div style={{ marginBottom: 14 }}><Label>Malezas presentes</Label><CheckGrid items={MALEZAS} selected={data.malezas} onChange={v => set("malezas", v)} /></div>
