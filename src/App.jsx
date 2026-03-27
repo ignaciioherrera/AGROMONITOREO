@@ -1,4 +1,4 @@
-// AGRO·MONITOR Monitoreador v2.1 — Storage + Plantillas + Acordeon
+// AGRO·MONITOR Monitoreador v2.2 — Fix foto upload
 import React, { useState, useRef, useEffect } from "react";
 
 const SUPABASE_URL = "https://izijmjntrpksmzuwvtle.supabase.co";
@@ -642,22 +642,19 @@ function AppInner({ session, onLogout }) {
   };
 
   const handlePhotos = (e) => {
-    // Capturar GPS en el momento de sacar la foto
+    // Capturar GPS al momento de sacar la foto
     let photoGps = null;
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         pos => { photoGps = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6), acc: Math.round(pos.coords.accuracy) }; },
         () => {},
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 }
+        { enableHighAccuracy: false, timeout: 3000, maximumAge: 30000 }
       );
     }
     Array.from(e.target.files).forEach(file => {
       const reader = new FileReader();
       reader.onload = (ev) => {
-        // Pequeño delay para dar chance al GPS de responder
-        setTimeout(() => {
-          setPhotos(p => [...p, { name: file.name, url: ev.target.result, gps: photoGps, hora: new Date().toTimeString().slice(0,5) }]);
-        }, 300);
+        setPhotos(p => [...p, { name: file.name, url: ev.target.result, gps: photoGps, hora: new Date().toTimeString().slice(0,5) }]);
       };
       reader.readAsDataURL(file);
     });
