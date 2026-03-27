@@ -20,7 +20,6 @@ const supabaseInsert = async (payload) => {
 // ── STORAGE DE FOTOS ──────────────────────────────────────────
 const subirFoto = async (foto, monitoreoId, index) => {
   try {
-    // Convertir base64 a blob
     const base64 = foto.url.split(",")[1];
     const mimeType = foto.url.split(";")[0].split(":")[1] || "image/jpeg";
     const byteChars = atob(base64);
@@ -42,10 +41,16 @@ const subirFoto = async (foto, monitoreoId, index) => {
       body: blob
     });
 
-    if (!res.ok) throw new Error(await res.text());
-    return `${SUPABASE_URL}/storage/v1/object/public/fotos-monitoreo/${path}`;
+    const resText = await res.text();
+    if (!res.ok) {
+      console.error(`Error subiendo foto ${index + 1}:`, res.status, resText);
+      return null;
+    }
+    const url = `${SUPABASE_URL}/storage/v1/object/public/fotos-monitoreo/${path}`;
+    console.log(`Foto ${index + 1} subida OK:`, url);
+    return url;
   } catch (e) {
-    console.error("Error subiendo foto:", e);
+    console.error("Error inesperado subiendo foto:", e);
     return null;
   }
 };
