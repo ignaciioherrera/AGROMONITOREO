@@ -239,6 +239,58 @@ const CULTIVOS = ["Maíz", "Soja", "Trigo", "Girasol", "Sorgo", "Maní", "Otro"]
 const ENFERMEDADES = ["Roya", "Mancha marrón", "Tizón", "Podredumbre", "Fusarium", "Esclerotinia", "Carbón", "Otra"];
 const MALEZAS = ["Sorgo de alepo", "Gramón", "Ciperácea", "Verdolaga", "Yuyo colorado", "Rama negra", "Capín", "Otra"];
 
+// Plantillas por cultivo — estadios y plagas relevantes
+const PLANTILLAS_CULTIVO = {
+  "Maíz": {
+    estadios: ["V1","V2","V3","V4","V5","V6","V7","V8","V9","V10","V12","VT","R1","R2","R3","R4","R5","R6"],
+    plagasRelevantes: ["isocas","chinches","cogollero","chicharrita","trips"],
+    enfermedadesRelevantes: ["Roya","Tizón","Carbón","Fusarium","Otra"],
+    notaDefault: "",
+  },
+  "Soja": {
+    estadios: ["V1","V2","V3","V4","V5","V6","R1","R2","R3","R4","R5","R6","R7","R8"],
+    plagasRelevantes: ["isocas","chinches","pulgones","trips","aranhuelas"],
+    enfermedadesRelevantes: ["Roya","Mancha marrón","Podredumbre","Esclerotinia","Otra"],
+    notaDefault: "",
+  },
+  "Trigo": {
+    estadios: ["Macollaje","Encañazón","Espigazón","Antesis","Grano lechoso","Grano pastoso","Madurez"],
+    plagasRelevantes: ["pulgones","trips","aranhuelas"],
+    enfermedadesRelevantes: ["Roya","Tizón","Fusarium","Otra"],
+    notaDefault: "",
+  },
+  "Girasol": {
+    estadios: ["V2","V4","V6","V8","R1","R3","R5","R7","R9"],
+    plagasRelevantes: ["isocas","chinches","trips"],
+    enfermedadesRelevantes: ["Podredumbre","Esclerotinia","Otra"],
+    notaDefault: "",
+  },
+  "Sorgo": {
+    estadios: ["V3","V6","V9","Panojamiento","Floración","Grano lechoso","Madurez"],
+    plagasRelevantes: ["isocas","pulgones","cogollero","chicharrita"],
+    enfermedadesRelevantes: ["Carbón","Fusarium","Otra"],
+    notaDefault: "",
+  },
+  "Maní": {
+    estadios: ["V1","V3","V5","R1","R3","R5","R7","R8"],
+    plagasRelevantes: ["isocas","trips","aranhuelas"],
+    enfermedadesRelevantes: ["Podredumbre","Tizón","Otra"],
+    notaDefault: "",
+  },
+};
+
+// Plantillas editables guardadas en localStorage por usuario
+const getPlantillasGuardadas = () => {
+  try { return JSON.parse(localStorage.getItem("agro_plantillas") || "{}"); }
+  catch { return {}; }
+};
+const savePlantillas = (p) => localStorage.setItem("agro_plantillas", JSON.stringify(p));
+
+const getPlantilla = (cultivo) => {
+  const guardadas = getPlantillasGuardadas();
+  return guardadas[cultivo] || PLANTILLAS_CULTIVO[cultivo] || null;
+};
+
 const inputBase = {
   width: "100%", background: C.inputBg, border: `1.5px solid ${C.border}`,
   borderRadius: 10, padding: "11px 12px", fontFamily: SANS, fontSize: 14,
@@ -379,6 +431,46 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+
+// ── PLANTILLA EDITOR ─────────────────────────────────────────
+function PlantillaEditor({ cultivo, plantilla, onSave, onCancel }) {
+  const [estadios, setEstadios] = useState((plantilla?.estadios || []).join(", "));
+
+  const handleSave = () => {
+    const nuevosEstadios = estadios.split(",").map(s => s.trim()).filter(Boolean);
+    onSave({ ...plantilla, estadios: nuevosEstadios });
+  };
+
+  return (
+    <div style={{ marginTop: 12, background: C.sectionBg, border: `1.5px solid ${C.accent}40`, borderRadius: 12, padding: 14 }}>
+      <div style={{ fontFamily: FONT, fontSize: 11, color: C.accentDark, fontWeight: 700, letterSpacing: 1, marginBottom: 10 }}>
+        EDITANDO PLANTILLA — {cultivo.toUpperCase()}
+      </div>
+      <div style={{ marginBottom: 10 }}>
+        <Label>Estadios (separados por coma)</Label>
+        <textarea
+          value={estadios}
+          onChange={e => setEstadios(e.target.value)}
+          rows={3}
+          placeholder="V1, V2, V3, R1, R2..."
+          style={{ width: "100%", background: C.inputBg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "10px 12px", fontFamily: FONT, fontSize: 13, color: C.text, outline: "none", boxSizing: "border-box", resize: "none" }}
+        />
+        <div style={{ fontSize: 10, color: C.textFaint, marginTop: 4 }}>Estos estadios se guardan en tu dispositivo y se usan como chips de selección rápida</div>
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={handleSave}
+          style={{ flex: 1, background: C.accent, border: "none", borderRadius: 10, padding: "10px", color: "#fff", fontFamily: FONT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          Guardar plantilla
+        </button>
+        <button onClick={onCancel}
+          style={{ flex: 1, background: C.inputBg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "10px", color: C.textDim, fontFamily: SANS, fontSize: 12, cursor: "pointer" }}>
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AppInner({ session, onLogout }) {
   const [step, setStep] = useState("form");
   const [photos, setPhotos] = useState([]);
@@ -427,6 +519,26 @@ function AppInner({ session, onLogout }) {
 
   const set = (key, val) => setData(p => ({ ...p, [key]: val }));
 
+  // ── Plantilla por cultivo ─────────────────────────────────────
+  const [editandoPlantilla, setEditandoPlantilla] = useState(false);
+  const [plantillasLocales, setPlantillasLocales] = useState(() => getPlantillasGuardadas());
+
+  const aplicarPlantilla = (cultivo) => {
+    const p = getPlantilla(cultivo);
+    if (!p) return;
+    // Pre-completar estadio si está vacío
+    if (!data.estadioFenologico && p.estadios?.length > 0) {
+      set("estadioFenologico", p.estadios[0]);
+    }
+  };
+
+  const guardarPlantilla = (cultivo, nuevaPlantilla) => {
+    const actualizadas = { ...plantillasLocales, [cultivo]: nuevaPlantilla };
+    setPlantillasLocales(actualizadas);
+    savePlantillas(actualizadas);
+    setEditandoPlantilla(false);
+  };
+
   // ── Estacion automática ───────────────────────────────────────
   const [estacionActual, setEstacionActual] = useState(0);
 
@@ -470,9 +582,23 @@ function AppInner({ session, onLogout }) {
   };
 
   const handlePhotos = (e) => {
+    // Capturar GPS en el momento de sacar la foto
+    let photoGps = null;
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => { photoGps = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6), acc: Math.round(pos.coords.accuracy) }; },
+        () => {},
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 }
+      );
+    }
     Array.from(e.target.files).forEach(file => {
       const reader = new FileReader();
-      reader.onload = (ev) => setPhotos(p => [...p, { name: file.name, url: ev.target.result }]);
+      reader.onload = (ev) => {
+        // Pequeño delay para dar chance al GPS de responder
+        setTimeout(() => {
+          setPhotos(p => [...p, { name: file.name, url: ev.target.result, gps: photoGps, hora: new Date().toTimeString().slice(0,5) }]);
+        }, 300);
+      };
       reader.readAsDataURL(file);
     });
   };
@@ -529,6 +655,9 @@ function AppInner({ session, onLogout }) {
         observaciones: data.observaciones || null,
         recomendaciones: data.recomendaciones || null,
         fotos_count: photos.length,
+        fotos_gps: photos.filter(p => p.gps).map(p => ({ gps: p.gps, hora: p.hora })).length > 0
+          ? photos.filter(p => p.gps).map(p => ({ lat: p.gps.lat, lng: p.gps.lng, hora: p.hora }))
+          : null,
         monitoreador_email: session?.user?.email || null,
         monitoreador_nombre: session?.user?.user_metadata?.nombre || session?.user?.email?.split("@")[0] || null,
       };
@@ -712,7 +841,7 @@ function AppInner({ session, onLogout }) {
           <CustomSelect
             label="Cultivo que está monitoreando *"
             value={data.cultivo}
-            onChange={v => set("cultivo", v)}
+            onChange={v => { set("cultivo", v); set("estadioFenologico", ""); setTimeout(() => aplicarPlantilla(v), 0); }}
             options={CULTIVOS}
             placeholder="Seleccionar cultivo..."
           />
@@ -869,8 +998,46 @@ function AppInner({ session, onLogout }) {
             <NumInput label="Cobertura canopeo" unit="%" value={data.cobertura} onChange={v => set("cobertura", v)} />
           </div>
           <div style={{ marginBottom: 12 }}>
-            <Label>Estadio fenológico</Label>
-            <input type="text" placeholder="Ej: V6, R1, espigazón..." value={data.estadioFenologico} onChange={e => set("estadioFenologico", e.target.value)} style={inputBase} />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+              <Label>Estadio fenológico</Label>
+              {data.cultivo && getPlantilla(data.cultivo) && (
+                <button
+                  onClick={() => setEditandoPlantilla(v => !v)}
+                  style={{ background: "none", border: "none", fontSize: 11, color: C.accent, cursor: "pointer", fontFamily: SANS, padding: 0, fontWeight: 600 }}>
+                  {editandoPlantilla ? "✕ Cerrar" : "✏️ Editar plantilla"}
+                </button>
+              )}
+            </div>
+            {data.cultivo && getPlantilla(data.cultivo) ? (
+              <div>
+                {/* Chips de estadios */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 8 }}>
+                  {(plantillasLocales[data.cultivo]?.estadios || PLANTILLAS_CULTIVO[data.cultivo]?.estadios || []).map(e => (
+                    <div key={e} onClick={() => set("estadioFenologico", e)}
+                      style={{ padding: "6px 13px", borderRadius: 20, border: `1.5px solid ${data.estadioFenologico === e ? C.accent : C.border}`, background: data.estadioFenologico === e ? C.accentLight : C.inputBg, fontFamily: FONT, fontSize: 12, color: data.estadioFenologico === e ? C.accentDark : C.textDim, cursor: "pointer", fontWeight: data.estadioFenologico === e ? 700 : 400 }}>
+                      {e}
+                    </div>
+                  ))}
+                </div>
+                {/* Input libre por si no está en la lista */}
+                <input type="text" placeholder="O escribí otro estadio..." value={data.estadioFenologico}
+                  onChange={e => set("estadioFenologico", e.target.value)}
+                  style={{ ...inputBase, fontSize: 13 }} />
+
+                {/* Editor de plantilla */}
+                {editandoPlantilla && (
+                  <PlantillaEditor
+                    cultivo={data.cultivo}
+                    plantilla={plantillasLocales[data.cultivo] || PLANTILLAS_CULTIVO[data.cultivo]}
+                    onSave={(nueva) => guardarPlantilla(data.cultivo, nueva)}
+                    onCancel={() => setEditandoPlantilla(false)}
+                  />
+                )}
+              </div>
+            ) : (
+              <input type="text" placeholder="Ej: V6, R1, espigazón..." value={data.estadioFenologico}
+                onChange={e => set("estadioFenologico", e.target.value)} style={inputBase} />
+            )}
           </div>
           <Toggle label="Presencia de vuelco" value={data.vuelco} onChange={v => set("vuelco", v)} />
         </SECTION>
@@ -934,9 +1101,23 @@ function AppInner({ session, onLogout }) {
           {photos.length > 0 && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
               {photos.map((p, i) => (
-                <div key={i} style={{ position: "relative", aspectRatio: "1", borderRadius: 10, overflow: "hidden", border: `1.5px solid ${C.border}` }}>
-                  <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  <button onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))} style={{ position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: "50%", background: "rgba(0,0,0,0.6)", border: "none", color: "#fff", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                <div key={i} style={{ position: "relative", borderRadius: 10, overflow: "hidden", border: `1.5px solid ${C.border}` }}>
+                  <div style={{ aspectRatio: "1", overflow: "hidden" }}>
+                    <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  </div>
+                  <button onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}
+                    style={{ position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: "50%", background: "rgba(0,0,0,0.6)", border: "none", color: "#fff", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                  {/* GPS badge */}
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.55)", padding: "3px 5px" }}>
+                    {p.gps ? (
+                      <div style={{ fontSize: 9, color: "#4ae87a", fontFamily: "monospace", lineHeight: 1.3 }}>
+                        📍 {p.gps.lat}, {p.gps.lng}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", fontFamily: "monospace" }}>sin GPS</div>
+                    )}
+                    {p.hora && <div style={{ fontSize: 9, color: "rgba(255,255,255,0.6)", fontFamily: "monospace" }}>{p.hora}</div>}
+                  </div>
                 </div>
               ))}
             </div>
