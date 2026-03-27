@@ -460,6 +460,32 @@ function PlantillaEditor({ cultivo, plantilla, onSave, onCancel }) {
   );
 }
 
+
+// ── ACORDEON COLAPSABLE ───────────────────────────────────────
+function Acordeon({ titulo, icono, badge, children, defaultOpen = false }) {
+  const [abierto, setAbierto] = useState(defaultOpen);
+  return (
+    <div style={{ background: C.card, border: `1.5px solid ${abierto ? C.accent + "40" : C.border}`, borderRadius: 16, overflow: "hidden", marginBottom: 14 }}>
+      <div
+        onClick={() => setAbierto(v => !v)}
+        style={{ background: abierto ? C.accentLight : C.sectionBg, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, cursor: "pointer", borderBottom: abierto ? `1px solid ${C.accent}30` : "none" }}
+      >
+        <span style={{ fontSize: 20 }}>{icono}</span>
+        <span style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: abierto ? C.accentDark : C.textDim, letterSpacing: 2, flex: 1 }}>{titulo}</span>
+        {badge != null && (
+          <span style={{ background: C.accent, color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: 10, padding: "1px 8px", fontFamily: FONT, minWidth: 20, textAlign: "center" }}>
+            {badge}
+          </span>
+        )}
+        <span style={{ fontSize: 12, color: C.textFaint, marginLeft: 4 }}>{abierto ? "▲" : "▼"}</span>
+      </div>
+      {abierto && (
+        <div style={{ padding: "14px 16px" }}>{children}</div>
+      )}
+    </div>
+  );
+}
+
 function AppInner({ session, onLogout }) {
   const [step, setStep] = useState("form");
   const [photos, setPhotos] = useState([]);
@@ -1098,31 +1124,31 @@ function AppInner({ session, onLogout }) {
                 </PlagaRow>
               </SECTION>
 
-              <SECTION title="ENFERMEDADES FOLIARES" icon="🦠">
+              <Acordeon titulo="ENFERMEDADES FOLIARES" icono="🦠" badge={data.enfermedades.length > 0 ? data.enfermedades.length : null}>
                 <div style={{ marginBottom: 14 }}>
                   <Label>Enfermedades detectadas</Label>
                   <CheckGrid items={enfermedadesRelevantes} selected={data.enfermedades} onChange={v => set("enfermedades", v)} />
                 </div>
                 {data.enfermedades.length > 0 && <div style={{ marginBottom: 12 }}><StarRating label="Intensidad / severidad" value={data.enfermedadIntensidad} onChange={v => set("enfermedadIntensidad", v)} /></div>}
                 <TextArea label="Observaciones" value={data.enfermedadNota} onChange={v => set("enfermedadNota", v)} placeholder="Zona afectada, síntomas, avance..." />
-              </SECTION>
+              </Acordeon>
             </>
           );
         })()}
 
-        <SECTION title="MALEZAS" icon="🌾">
+        <Acordeon titulo="MALEZAS" icono="🌾" badge={data.malezas.length > 0 ? data.malezas.length : null}>
           <div style={{ marginBottom: 14 }}><Label>Malezas presentes</Label><CheckGrid items={MALEZAS} selected={data.malezas} onChange={v => set("malezas", v)} /></div>
           {data.malezas.length > 0 && <div style={{ marginBottom: 12 }}><NumInput label="Cobertura estimada" unit="%" value={data.malezaCobertura} onChange={v => set("malezaCobertura", v)} /></div>}
           <TextArea label="Observaciones" value={data.malezaNota} onChange={v => set("malezaNota", v)} placeholder="Estadio, distribución, predominancia..." />
-        </SECTION>
+        </Acordeon>
 
-        <SECTION title="ESTADO SANITARIO GENERAL" icon="🩺">
+        <Acordeon titulo="ESTADO SANITARIO" icono="🩺" badge={data.estresHidrico > 0 || data.danoHerbicida || data.danoGranizo ? "!" : null}>
           <div style={{ marginBottom: 14 }}><StarRating label="Estrés hídrico visual (1 = sin estrés · 5 = severo)" value={data.estresHidrico} onChange={v => set("estresHidrico", v)} /></div>
           <Toggle label="Daño por herbicida" value={data.danoHerbicida} onChange={v => set("danoHerbicida", v)} />
           {data.danoHerbicida && <div style={{ marginTop: 10, marginBottom: 10 }}><TextArea label="Descripción del daño" value={data.danoHerbicidaNota} onChange={v => set("danoHerbicidaNota", v)} placeholder="Tipo de síntoma, zona afectada, % plantas..." /></div>}
           <Toggle label="Daño por granizo" value={data.danoGranizo} onChange={v => set("danoGranizo", v)} noBorder={!data.danoGranizo} />
           {data.danoGranizo && <div style={{ marginTop: 10 }}><TextArea label="Descripción del daño" value={data.danoGranizoNota} onChange={v => set("danoGranizoNota", v)} placeholder="% daño estimado, órganos afectados..." /></div>}
-        </SECTION>
+        </Acordeon>
 
         <SECTION title="FOTOGRAFÍAS" icon="📷">
           <input ref={fileRef} type="file" accept="image/*" multiple capture="environment" onChange={handlePhotos} style={{ display: "none" }} />
