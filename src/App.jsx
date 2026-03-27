@@ -17,6 +17,96 @@ const supabaseInsert = async (payload) => {
   if (!res.ok) throw new Error(await res.text());
 };
 
+// ── AUTH ──────────────────────────────────────────────────────
+const authSignIn = async (email, password) => {
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY },
+    body: JSON.stringify({ email, password })
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error_description || data.message || "Error al iniciar sesión");
+  return data;
+};
+
+const authSignOut = async (token) => {
+  await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` }
+  });
+};
+
+const getStoredSession = () => {
+  try { return JSON.parse(localStorage.getItem("agro_monitor_session") || "null"); } catch { return null; }
+};
+const storeSession = (s) => localStorage.setItem("agro_monitor_session", JSON.stringify(s));
+const clearSession = () => localStorage.removeItem("agro_monitor_session");
+
+function LoginScreen({ onLogin }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleLogin = async () => {
+    if (!email || !password) return;
+    setLoading(true); setError(null);
+    try {
+      const session = await authSignIn(email, password);
+      storeSession(session);
+      onLogin(session);
+    } catch (err) { setError(err.message); }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f5f7f4", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif", padding: 20 }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;700&family=DM+Sans:wght@400;600;700&display=swap'); * { box-sizing: border-box; }`}</style>
+      <div style={{ width: "100%", maxWidth: 380 }}>
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 22, color: "#2d7a47", fontWeight: 700, letterSpacing: 2 }}>◈ MONITOREO</div>
+            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#94b09a", letterSpacing: 3 }}>PLANILLA DE CAMPO</div>
+          </div>
+        </div>
+
+        <div style={{ background: "#fff", borderRadius: 20, border: "1.5px solid #dde8df", padding: 28, boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
+          <div style={{ fontSize: 17, fontWeight: 700, color: "#1a2e1e", marginBottom: 4 }}>Hola, monitoreador 👋</div>
+          <div style={{ fontSize: 13, color: "#94b09a", marginBottom: 24 }}>Ingresá para acceder a tu planilla</div>
+
+          {error && (
+            <div style={{ background: "#fee2e2", border: "1px solid #dc262630", borderRadius: 10, padding: "10px 14px", color: "#dc2626", fontSize: 13, marginBottom: 16 }}>
+              {error}
+            </div>
+          )}
+
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: "#5a7a60", fontFamily: "'DM Mono', monospace", marginBottom: 6, fontWeight: 600 }}>EMAIL</div>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()}
+              placeholder="tu@email.com" autoFocus
+              style={{ width: "100%", background: "#f8faf8", border: "1.5px solid #dde8df", borderRadius: 10, padding: "12px 14px", fontSize: 14, color: "#1a2e1e", outline: "none", fontFamily: "'DM Sans', sans-serif" }} />
+          </div>
+          <div style={{ marginBottom: 22 }}>
+            <div style={{ fontSize: 11, color: "#5a7a60", fontFamily: "'DM Mono', monospace", marginBottom: 6, fontWeight: 600 }}>CONTRASEÑA</div>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()}
+              placeholder="••••••••"
+              style={{ width: "100%", background: "#f8faf8", border: "1.5px solid #dde8df", borderRadius: 10, padding: "12px 14px", fontSize: 14, color: "#1a2e1e", outline: "none", fontFamily: "'DM Sans', sans-serif" }} />
+          </div>
+          <button onClick={handleLogin} disabled={loading || !email || !password}
+            style={{ width: "100%", background: loading || !email || !password ? "#b8cebc" : "#2d7a47", border: "none", borderRadius: 14, padding: "15px", color: "#fff", fontSize: 14, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", fontFamily: "'DM Mono', monospace", letterSpacing: 1 }}>
+            {loading ? "INGRESANDO..." : "INGRESAR"}
+          </button>
+        </div>
+
+        <div style={{ textAlign: "center", marginTop: 20, fontSize: 11, color: "#94b09a", fontFamily: "'DM Mono', monospace" }}>
+          AGRO·MONITOR · v1.2
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── OFFLINE QUEUE ─────────────────────────────
 const QUEUE_KEY = "agro_monitor_queue";
 
@@ -271,7 +361,7 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-function AppInner() {
+function AppInner({ session, onLogout }) {
   const [step, setStep] = useState("form");
   const [photos, setPhotos] = useState([]);
   const [gps, setGps] = useState(null);
@@ -318,6 +408,26 @@ function AppInner() {
   });
 
   const set = (key, val) => setData(p => ({ ...p, [key]: val }));
+
+  // ── Historial del lote ────────────────────────────────────────
+  const [historial, setHistorial] = useState([]);
+  const [historialLoading, setHistorialLoading] = useState(false);
+  const [mostrarHistorial, setMostrarHistorial] = useState(false);
+
+  const fetchHistorial = async (lote) => {
+    if (!lote || !navigator.onLine) return;
+    setHistorialLoading(true);
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/monitoreos?lote=eq.${encodeURIComponent(lote)}&order=fecha.desc,hora.desc&limit=3`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      );
+      const d = await r.json();
+      setHistorial(Array.isArray(d) ? d : []);
+      if (Array.isArray(d) && d.length > 0) setMostrarHistorial(true);
+    } catch { setHistorial([]); }
+    setHistorialLoading(false);
+  };
 
   const getGPS = () => {
     setGpsLoading(true);
@@ -388,6 +498,8 @@ function AppInner() {
         observaciones: data.observaciones || null,
         recomendaciones: data.recomendaciones || null,
         fotos_count: photos.length,
+        monitoreador_email: session?.user?.email || null,
+        monitoreador_nombre: session?.user?.user_metadata?.nombre || session?.user?.email?.split("@")[0] || null,
       };
       try {
         await supabaseInsert(payload);
@@ -422,8 +534,19 @@ function AppInner() {
       <div style={{ fontSize: 13, color: C.textFaint, marginBottom: 4 }}>{data.fecha} · {data.hora}</div>
       {gps && !gps.error && <div style={{ fontSize: 12, color: C.textFaint, marginBottom: 4 }}>📍 {gps.lat}, {gps.lng}</div>}
       <div style={{ fontSize: 13, color: C.textFaint, marginBottom: 12 }}>{photos.length} foto{photos.length !== 1 ? "s" : ""}</div>
-      <div style={{ background: pendingCount > 0 ? C.warnLight : C.accentLight, border: `1px solid ${pendingCount > 0 ? C.warn + "40" : C.accent + "30"}`, borderRadius: 10, padding: "10px 18px", marginBottom: 24, fontSize: 13, color: pendingCount > 0 ? C.warn : C.accentDark, textAlign: "center" }}>
-        {pendingCount > 0 ? `⚠ Guardado localmente — ${pendingCount} pendiente${pendingCount > 1 ? "s" : ""} de envío` : "✓ Enviado correctamente"}
+      <div style={{ background: pendingCount > 0 ? C.warnLight : C.accentLight, border: `1.5px solid ${pendingCount > 0 ? C.warn + "60" : C.accent + "40"}`, borderRadius: 12, padding: "14px 18px", marginBottom: 24, textAlign: "center" }}>
+        {pendingCount > 0 ? (
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.warn, marginBottom: 4 }}>⚠ Guardado sin conexión</div>
+            <div style={{ fontSize: 12, color: C.warn }}>{pendingCount} monitoreo{pendingCount > 1 ? "s" : ""} pendiente{pendingCount > 1 ? "s" : ""} de envío</div>
+            <div style={{ fontSize: 11, color: C.textFaint, marginTop: 4 }}>Se enviará automáticamente cuando recuperes señal</div>
+          </div>
+        ) : (
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.accentDark, marginBottom: 2 }}>✓ Enviado correctamente</div>
+            <div style={{ fontSize: 12, color: C.textDim }}>Los datos ya están disponibles en el panel admin</div>
+          </div>
+        )}
       </div>
       <button onClick={reset} style={{ background: C.accent, border: "none", borderRadius: 14, padding: "14px 36px", color: "#fff", fontFamily: FONT, fontSize: 14, fontWeight: 700, cursor: "pointer", letterSpacing: 1 }}>NUEVO MONITOREO</button>
     </div>
@@ -443,6 +566,7 @@ function AppInner() {
         @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;700&family=DM+Sans:wght@400;600;700&display=swap');
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         input, textarea, select { -webkit-appearance: none; appearance: none; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
         input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
         ::-webkit-scrollbar { display: none; }
         input::placeholder, textarea::placeholder { color: ${C.textFaint}; }
@@ -455,6 +579,10 @@ function AppInner() {
             <div style={{ fontFamily: FONT, fontSize: 18, color: "#fff", fontWeight: 700, letterSpacing: 1 }}>◈ MONITOREO</div>
           </div>
           <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontFamily: FONT, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>{session?.user?.user_metadata?.nombre || session?.user?.email?.split("@")[0]}</span>
+              <button onClick={onLogout} style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "3px 10px", color: "rgba(255,255,255,0.8)", fontFamily: FONT, fontSize: 10, cursor: "pointer" }}>Salir</button>
+            </div>
             <div style={{ fontFamily: FONT, fontSize: 12, color: "rgba(255,255,255,0.8)" }}>{data.fecha} · {data.hora}</div>
             {pendingCount > 0 && (
               <div style={{ display: "flex", gap: 6 }}>
@@ -476,8 +604,10 @@ function AppInner() {
             )}
             {pendingCount === 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <span style={{ width: 7, height: 7, borderRadius: "50%", background: navigator.onLine ? "rgba(255,255,255,0.8)" : "#f5c542", display: "inline-block" }} />
-                <span style={{ fontFamily: FONT, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>{navigator.onLine ? "en línea" : "sin señal"}</span>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: navigator.onLine ? "rgba(255,255,255,0.8)" : "#f5c542", display: "inline-block", animation: navigator.onLine ? "none" : "pulse 1.5s infinite" }} />
+                <span style={{ fontFamily: FONT, fontSize: 11, color: navigator.onLine ? "rgba(255,255,255,0.7)" : "#f5c542", fontWeight: navigator.onLine ? 400 : 700 }}>
+                  {navigator.onLine ? "en línea" : "⚠ SIN SEÑAL"}
+                </span>
               </div>
             )}
           </div>
@@ -507,7 +637,7 @@ function AppInner() {
             <CustomSelect
               label="Lote *"
               value={data.lote}
-              onChange={v => set("lote", v)}
+              onChange={v => { set("lote", v); setHistorial([]); setMostrarHistorial(false); fetchHistorial(v); }}
               options={EMPRESAS.find(e => e.empresa === data.empresa)?.campos.find(c => c.campo === data.campo)?.lotes || []}
               placeholder="Seleccionar lote..."
             />
@@ -535,6 +665,117 @@ function AppInner() {
             </button>
           </div>
         </SECTION>
+
+        {/* ── HISTORIAL DEL LOTE ── */}
+        {data.lote && (historialLoading || historial.length > 0) && (
+          <div style={{ background: C.card, border: `1.5px solid ${C.accent}40`, borderRadius: 16, overflow: "hidden", marginBottom: 14 }}>
+            {/* Header del historial */}
+            <div
+              onClick={() => setMostrarHistorial(p => !p)}
+              style={{ background: C.accentLight, padding: "12px 16px", borderBottom: mostrarHistorial ? `1px solid ${C.accent}30` : "none", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 18 }}>🕐</span>
+                <span style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: C.accentDark, letterSpacing: 2 }}>
+                  HISTORIAL — {data.lote}
+                </span>
+                {historialLoading && <span style={{ fontSize: 11, color: C.textFaint }}>cargando...</span>}
+                {!historialLoading && historial.length > 0 && (
+                  <span style={{ background: C.accent, color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: 10, padding: "1px 7px", fontFamily: FONT }}>
+                    {historial.length}
+                  </span>
+                )}
+              </div>
+              <span style={{ fontSize: 12, color: C.textFaint }}>{mostrarHistorial ? "▲" : "▼"}</span>
+            </div>
+
+            {mostrarHistorial && !historialLoading && (
+              <div style={{ padding: "12px 16px" }}>
+                {historial.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "16px 0", color: C.textFaint, fontSize: 13 }}>
+                    Sin monitoreos previos para este lote
+                  </div>
+                ) : historial.map((m, i) => {
+                  const UMBS = { isocas:2, chinches:1, pulgones:3, chicharrita:1, trips:5, aranhuelas:2, cogollero:1 };
+                  const plagas = Object.keys(UMBS);
+                  const alertas = plagas.filter(p => (parseFloat(m[p])||0) >= UMBS[p]);
+                  const plagaLabels = { isocas:"Isocas", chinches:"Chinches", pulgones:"Pulgones", chicharrita:"Chicharrita", trips:"Trips", aranhuelas:"Arañuelas", cogollero:"Cogollero" };
+
+                  return (
+                    <div key={m.id} style={{ paddingBottom: i < historial.length - 1 ? 12 : 0, marginBottom: i < historial.length - 1 ? 12 : 0, borderBottom: i < historial.length - 1 ? `1px solid ${C.border}` : "none" }}>
+                      {/* Header monitoreo */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: alertas.length > 0 ? C.danger : C.accent, flexShrink: 0 }} />
+                          <span style={{ fontFamily: FONT, fontSize: 13, fontWeight: 700, color: C.text }}>{m.fecha}</span>
+                          {m.hora && <span style={{ fontSize: 11, color: C.textFaint }}>{m.hora.slice(0,5)}</span>}
+                        </div>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          {m.estadio_fenologico && (
+                            <span style={{ background: C.sectionBg, color: C.textDim, fontSize: 10, padding: "2px 8px", borderRadius: 10, fontFamily: FONT }}>{m.estadio_fenologico}</span>
+                          )}
+                          {m.monitoreador_nombre && (
+                            <span style={{ background: C.sectionBg, color: C.textFaint, fontSize: 10, padding: "2px 8px", borderRadius: 10 }}>{m.monitoreador_nombre}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Plagas sobre umbral */}
+                      {alertas.length > 0 && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                          {alertas.map(p => (
+                            <div key={p} style={{ background: C.dangerLight, border: `1px solid ${C.danger}30`, borderRadius: 8, padding: "4px 10px", fontSize: 11 }}>
+                              <span style={{ fontWeight: 700, color: C.danger }}>{plagaLabels[p]}: </span>
+                              <span style={{ fontFamily: FONT, color: C.danger, fontWeight: 700 }}>{m[p]}</span>
+                              <span style={{ color: C.textFaint }}> (u:{UMBS[p]})</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Plagas sin alerta con valores */}
+                      {(() => {
+                        const conValor = plagas.filter(p => (parseFloat(m[p])||0) > 0 && !alertas.includes(p));
+                        if (conValor.length === 0) return null;
+                        return (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 6 }}>
+                            {conValor.map(p => (
+                              <span key={p} style={{ background: C.sectionBg, color: C.textDim, fontSize: 10, padding: "2px 8px", borderRadius: 8, fontFamily: FONT }}>
+                                {plagaLabels[p]}: {m[p]}
+                              </span>
+                            ))}
+                          </div>
+                        );
+                      })()}
+
+                      {/* Enfermedades */}
+                      {m.enfermedades?.length > 0 && (
+                        <div style={{ fontSize: 11, color: C.warn, marginBottom: 4 }}>
+                          🦠 {m.enfermedades.join(", ")} {m.enfermedad_intensidad ? `(int: ${m.enfermedad_intensidad}/5)` : ""}
+                        </div>
+                      )}
+
+                      {/* Stats rápidos */}
+                      <div style={{ display: "flex", gap: 12, fontSize: 10, color: C.textFaint }}>
+                        {m.cobertura && <span>Canopeo: {m.cobertura}%</span>}
+                        {m.estres_hidrico > 0 && <span style={{ color: m.estres_hidrico >= 4 ? C.danger : C.warn }}>Estrés: {m.estres_hidrico}/5</span>}
+                        {m.plantas_por_metro && <span>Plantas: {m.plantas_por_metro}/m</span>}
+                        {alertas.length === 0 && <span style={{ color: C.accent, fontWeight: 600 }}>✓ Sin alertas</span>}
+                      </div>
+
+                      {/* Recomendaciones previas */}
+                      {m.recomendaciones && (
+                        <div style={{ marginTop: 6, background: C.accentLight, borderRadius: 8, padding: "6px 10px", fontSize: 11, color: C.accentDark, borderLeft: `3px solid ${C.accent}` }}>
+                          💡 {m.recomendaciones}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         <SECTION title="STANDEO Y CULTIVO" icon="🌱">
           <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
@@ -638,5 +879,15 @@ function AppInner() {
 }
 
 export default function App() {
-  return <ErrorBoundary><AppInner /></ErrorBoundary>;
+  const [session, setSession] = useState(() => getStoredSession());
+
+  const handleLogin = (s) => setSession(s);
+  const handleLogout = async () => {
+    if (session?.access_token) await authSignOut(session.access_token).catch(() => {});
+    clearSession();
+    setSession(null);
+  };
+
+  if (!session) return <ErrorBoundary><LoginScreen onLogin={handleLogin} /></ErrorBoundary>;
+  return <ErrorBoundary><AppInner session={session} onLogout={handleLogout} /></ErrorBoundary>;
 }
