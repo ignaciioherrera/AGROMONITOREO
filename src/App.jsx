@@ -17,6 +17,24 @@ const supabaseInsert = async (payload) => {
   if (!res.ok) throw new Error(await res.text());
 };
 
+// ── ESTACION DE MUESTREO ─────────────────────────────────────
+// Clave: empresa + campo + fecha → contador correlativo por jornada
+const getEstacionKey = (empresa, campo, fecha) =>
+  `agro_estacion_${empresa}_${campo}_${fecha}`.replace(/\s+/g, "_");
+
+const getEstacionActual = (empresa, campo, fecha) => {
+  try { return parseInt(localStorage.getItem(getEstacionKey(empresa, campo, fecha)) || "0"); }
+  catch { return 0; }
+};
+
+const incrementarEstacion = (empresa, campo, fecha) => {
+  const key = getEstacionKey(empresa, campo, fecha);
+  const actual = getEstacionActual(empresa, campo, fecha);
+  const siguiente = actual + 1;
+  localStorage.setItem(key, String(siguiente));
+  return siguiente;
+};
+
 // ── AUTH ──────────────────────────────────────────────────────
 const authSignIn = async (email, password) => {
   const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
@@ -409,6 +427,17 @@ function AppInner({ session, onLogout }) {
 
   const set = (key, val) => setData(p => ({ ...p, [key]: val }));
 
+  // ── Estacion automática ───────────────────────────────────────
+  const [estacionActual, setEstacionActual] = useState(0);
+
+  // Cuando cambia empresa, campo o lote → recalcular estacion pendiente
+  useEffect(() => {
+    if (data.empresa && data.campo && data.lote) {
+      const actual = getEstacionActual(data.empresa, data.campo, data.fecha);
+      setEstacionActual(actual + 1); // la próxima a registrar
+    }
+  }, [data.lote, data.empresa, data.campo, data.fecha]);
+
   // ── Historial del lote ────────────────────────────────────────
   const [historial, setHistorial] = useState([]);
   const [historialLoading, setHistorialLoading] = useState(false);
@@ -459,7 +488,7 @@ function AppInner({ session, onLogout }) {
         cultivo: data.cultivo,
         fecha: data.fecha,
         hora: data.hora,
-        estacion_muestreo: data.estacionMuestreo || null,
+        estacion_muestreo: data.lote ? estacionActual : null,
         gps_lat: gps && !gps.error ? parseFloat(gps.lat) : null,
         gps_lng: gps && !gps.error ? parseFloat(gps.lng) : null,
         gps_precision: gps && !gps.error ? gps.acc : null,
@@ -509,6 +538,11 @@ function AppInner({ session, onLogout }) {
         addToQueue(payload);
         setPendingCount(getQueue().length);
       }
+      // Incrementar estacion para la próxima parada del mismo campo
+      if (data.empresa && data.campo && data.fecha) {
+        const siguiente = incrementarEstacion(data.empresa, data.campo, data.fecha);
+        setEstacionActual(siguiente);
+      }
       setStep("success");
     } catch (err) {
       console.error(err);
@@ -519,7 +553,9 @@ function AppInner({ session, onLogout }) {
 
   const reset = () => {
     setStep("form"); setPhotos([]); setGps(null);
-    setData(p => ({ ...p, empresa: "", campo: "", lote: "", cultivo: "", estacionMuestreo: "", plantasPorMetro: "", cobertura: "", vuelco: false, isocas: "", chinches: "", pulgones: "", trips: "", aranhuelas: "", chicharrita: "", cogollero: "", otraPlaga: "", otraPlagaCantidad: "", enfermedades: [], malezas: [], estresHidrico: 0, danoHerbicida: false, danoGranizo: false, observaciones: "", recomendaciones: "" }));
+    // Mantiene empresa, campo y fecha para seguir la jornada — solo limpia lote y datos
+    setData(p => ({ ...p, lote: "", cultivo: "", estacionMuestreo: "", plantasPorMetro: "", distanciaEntresurco: "", estadioFenologico: "", cobertura: "", vuelco: false, isocas: "", isocasDano: "", chinches: "", chinchesDano: "", pulgones: "", pulgonesDano: "", trips: "", tripsDano: "", aranhuelas: "", aranhuelasDano: "", chicharrita: "", chicharritaDano: "", cogollero: "", cogolleroDano: "", otraPlaga: "", otraPlagaCantidad: "", enfermedades: [], enfermedadIntensidad: 0, enfermedadNota: "", malezas: [], malezaCobertura: "", malezaNota: "", estresHidrico: 0, danoHerbicida: false, danoHerbicidaNota: "", danoGranizo: false, danoGranizoNota: "", observaciones: "", recomendaciones: "" }));
+    setHistorial([]); setMostrarHistorial(false);
   };
 
   if (step === "success") return (
@@ -530,7 +566,7 @@ function AppInner({ session, onLogout }) {
       <div style={{ fontSize: 12, color: C.accent, marginBottom: 1 }}>{data.empresa}</div>
       <div style={{ fontSize: 13, color: C.textDim, marginBottom: 2 }}>{data.campo}</div>
       <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 4 }}>{data.lote}</div>
-      <div style={{ fontSize: 13, color: C.textFaint, marginBottom: 4 }}>{data.cultivo}{data.estacionMuestreo ? ` · Estación ${data.estacionMuestreo}` : ""}</div>
+      <div style={{ fontSize: 13, color: C.textFaint, marginBottom: 4 }}>{data.cultivo}{data.lote ? ` · Estación ${estacionActual - 1}` : ""}</div>
       <div style={{ fontSize: 13, color: C.textFaint, marginBottom: 4 }}>{data.fecha} · {data.hora}</div>
       {gps && !gps.error && <div style={{ fontSize: 12, color: C.textFaint, marginBottom: 4 }}>📍 {gps.lat}, {gps.lng}</div>}
       <div style={{ fontSize: 13, color: C.textFaint, marginBottom: 12 }}>{photos.length} foto{photos.length !== 1 ? "s" : ""}</div>
@@ -548,7 +584,24 @@ function AppInner({ session, onLogout }) {
           </div>
         )}
       </div>
-      <button onClick={reset} style={{ background: C.accent, border: "none", borderRadius: 14, padding: "14px 36px", color: "#fff", fontFamily: FONT, fontSize: 14, fontWeight: 700, cursor: "pointer", letterSpacing: 1 }}>NUEVO MONITOREO</button>
+      {/* Info próxima estación */}
+      {data.empresa && data.campo && (
+        <div style={{ background: C.sectionBg, border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 18px", marginBottom: 20, textAlign: "center" }}>
+          <div style={{ fontSize: 11, color: C.textFaint, fontFamily: FONT, letterSpacing: 1 }}>PRÓXIMA PARADA</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginTop: 2 }}>Estación {estacionActual} · {data.empresa}</div>
+          <div style={{ fontSize: 12, color: C.textDim }}>{data.campo}</div>
+        </div>
+      )}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%" }}>
+        <button onClick={reset} style={{ background: C.accent, border: "none", borderRadius: 14, padding: "14px 36px", color: "#fff", fontFamily: FONT, fontSize: 14, fontWeight: 700, cursor: "pointer", letterSpacing: 1 }}>
+          ▶ SIGUIENTE LOTE
+        </button>
+        <button
+          onClick={() => { setStep("form"); setPhotos([]); setGps(null); setData(p => ({ ...p, empresa: "", campo: "", lote: "", cultivo: "" })); setHistorial([]); }}
+          style={{ background: "none", border: `1.5px solid ${C.border}`, borderRadius: 14, padding: "12px 36px", color: C.textDim, fontFamily: FONT, fontSize: 13, cursor: "pointer" }}>
+          Nueva jornada
+        </button>
+      </div>
     </div>
   );
 
@@ -637,7 +690,19 @@ function AppInner({ session, onLogout }) {
             <CustomSelect
               label="Lote *"
               value={data.lote}
-              onChange={v => { set("lote", v); setHistorial([]); setMostrarHistorial(false); fetchHistorial(v); }}
+              onChange={v => {
+                set("lote", v);
+                setHistorial([]); setMostrarHistorial(false); fetchHistorial(v);
+                // GPS automático al seleccionar lote
+                if (navigator.geolocation) {
+                  setGpsLoading(true);
+                  navigator.geolocation.getCurrentPosition(
+                    pos => { setGps({ lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6), acc: Math.round(pos.coords.accuracy) }); setGpsLoading(false); },
+                    () => { setGpsLoading(false); },
+                    { enableHighAccuracy: true, timeout: 8000 }
+                  );
+                }
+              }}
               options={EMPRESAS.find(e => e.empresa === data.empresa)?.campos.find(c => c.campo === data.campo)?.lotes || []}
               placeholder="Seleccionar lote..."
             />
@@ -653,10 +718,26 @@ function AppInner({ session, onLogout }) {
             <div style={{ flex: 1 }}><Label>Fecha</Label><input type="date" value={data.fecha} onChange={e => set("fecha", e.target.value)} style={{ ...inputBase, fontFamily: FONT, fontSize: 13 }} /></div>
             <div style={{ flex: 1 }}><Label>Hora</Label><input type="time" value={data.hora} onChange={e => set("hora", e.target.value)} style={{ ...inputBase, fontFamily: FONT, fontSize: 13 }} /></div>
           </div>
-          <div style={{ marginBottom: 12 }}>
-            <Label>N° de estación de muestreo</Label>
-            <input type="number" inputMode="numeric" placeholder="Ej: 1, 2, 3..." value={data.estacionMuestreo} onChange={e => set("estacionMuestreo", e.target.value)} style={{ ...inputBase, fontFamily: FONT }} />
-          </div>
+          {/* Estación automática — solo visible cuando hay lote seleccionado */}
+          {data.lote && (
+            <div style={{ marginBottom: 12 }}>
+              <Label>Estación de muestreo</Label>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, background: C.accentLight, border: `1.5px solid ${C.accent}`, borderRadius: 10, padding: "11px 14px" }}>
+                <span style={{ fontFamily: FONT, fontSize: 22, fontWeight: 700, color: C.accentDark, minWidth: 32 }}>
+                  {estacionActual}
+                </span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: C.accentDark }}>
+                    Estación {estacionActual} — {data.lote}
+                  </div>
+                  <div style={{ fontSize: 11, color: C.textDim, marginTop: 1 }}>
+                    {data.empresa} · {data.campo} · {data.fecha}
+                  </div>
+                </div>
+                <span style={{ fontSize: 18 }}>📍</span>
+              </div>
+            </div>
+          )}
           <div>
             <Label>Punto GPS</Label>
             <button onClick={getGPS} disabled={gpsLoading} style={{ width: "100%", background: gps && !gps.error ? C.accentLight : C.inputBg, border: `1.5px solid ${gps && !gps.error ? C.accent : C.border}`, borderRadius: 10, padding: "11px 14px", fontFamily: SANS, fontSize: 13, color: gps && !gps.error ? C.accentDark : C.textDim, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, textAlign: "left" }}>
