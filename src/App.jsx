@@ -1,3 +1,4 @@
+// AGRO·MONITOR Monitoreador v2.1 — Storage + Plantillas + Acordeon
 import React, { useState, useRef, useEffect } from "react";
 
 const SUPABASE_URL = "https://izijmjntrpksmzuwvtle.supabase.co";
