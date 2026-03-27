@@ -430,13 +430,15 @@ function AppInner({ session, onLogout }) {
   // ── Estacion automática ───────────────────────────────────────
   const [estacionActual, setEstacionActual] = useState(0);
 
-  // Cuando cambia empresa, campo o lote → recalcular estacion pendiente
+  // Cuando cambia campo → resetear contador visual al valor del nuevo campo
   useEffect(() => {
-    if (data.empresa && data.campo && data.lote) {
+    if (data.empresa && data.campo && data.fecha) {
       const actual = getEstacionActual(data.empresa, data.campo, data.fecha);
-      setEstacionActual(actual + 1); // la próxima a registrar
+      setEstacionActual(actual + 1);
+    } else {
+      setEstacionActual(0);
     }
-  }, [data.lote, data.empresa, data.campo, data.fecha]);
+  }, [data.empresa, data.campo, data.fecha]);
 
   // ── Historial del lote ────────────────────────────────────────
   const [historial, setHistorial] = useState([]);
