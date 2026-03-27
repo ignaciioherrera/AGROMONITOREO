@@ -1007,7 +1007,7 @@ function AppInner({ session, onLogout }) {
           </div>
         )}
 
-        <SECTION title="STANDEO Y CULTIVO" icon="🌱">
+        <Acordeon titulo="STANDEO Y CULTIVO" icono="🌱" defaultOpen={false}>
           <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
             <NumInput label="Plantas / metro" unit="pl/m" value={data.plantasPorMetro} onChange={v => set("plantasPorMetro", v)} />
             <NumInput label="Entresurco" unit="cm" value={data.distanciaEntresurco} onChange={v => set("distanciaEntresurco", v)} />
@@ -1058,7 +1058,7 @@ function AppInner({ session, onLogout }) {
             )}
           </div>
           <Toggle label="Presencia de vuelco" value={data.vuelco} onChange={v => set("vuelco", v)} />
-        </SECTION>
+        </Acordeon>
 
         {(() => {
           const plantilla = getPlantilla(data.cultivo);
