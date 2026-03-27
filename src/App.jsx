@@ -17,6 +17,44 @@ const supabaseInsert = async (payload) => {
   if (!res.ok) throw new Error(await res.text());
 };
 
+// ── STORAGE DE FOTOS ──────────────────────────────────────────
+const subirFoto = async (foto, monitoreoId, index) => {
+  try {
+    // Convertir base64 a blob
+    const base64 = foto.url.split(",")[1];
+    const mimeType = foto.url.split(";")[0].split(":")[1] || "image/jpeg";
+    const byteChars = atob(base64);
+    const byteArr = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
+    const blob = new Blob([byteArr], { type: mimeType });
+
+    const ext = mimeType.includes("png") ? "png" : "jpg";
+    const path = `monitoreos/${monitoreoId}/foto_${index + 1}.${ext}`;
+
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/fotos-monitoreo/${path}`, {
+      method: "POST",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": mimeType,
+        "x-upsert": "true"
+      },
+      body: blob
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+    return `${SUPABASE_URL}/storage/v1/object/public/fotos-monitoreo/${path}`;
+  } catch (e) {
+    console.error("Error subiendo foto:", e);
+    return null;
+  }
+};
+
+const subirTodasLasFotos = async (fotos, monitoreoId) => {
+  const urls = await Promise.all(fotos.map((f, i) => subirFoto(f, monitoreoId, i)));
+  return urls.filter(Boolean);
+};
+
 // ── ESTACION DE MUESTREO ─────────────────────────────────────
 // Clave: empresa + campo + fecha → contador correlativo por jornada
 const getEstacionKey = (empresa, campo, fecha) =>
@@ -680,7 +718,39 @@ function AppInner({ session, onLogout }) {
         monitoreador_nombre: session?.user?.user_metadata?.nombre || session?.user?.email?.split("@")[0] || null,
       };
       try {
-        await supabaseInsert(payload);
+        // Insert y obtener ID para subir fotos
+        const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/monitoreos`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_KEY,
+            "Authorization": `Bearer ${SUPABASE_KEY}`,
+            "Prefer": "return=representation"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!insertRes.ok) throw new Error(await insertRes.text());
+        const [monitoreoInsertado] = await insertRes.json();
+        const monitoreoId = monitoreoInsertado?.id;
+
+        // Subir fotos si hay y tenemos el ID
+        if (photos.length > 0 && monitoreoId) {
+          const urls = await subirTodasLasFotos(photos, monitoreoId);
+          if (urls.length > 0) {
+            await fetch(`${SUPABASE_URL}/rest/v1/monitoreos?id=eq.${monitoreoId}`, {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                "apikey": SUPABASE_KEY,
+                "Authorization": `Bearer ${SUPABASE_KEY}`,
+                "Prefer": "return=minimal"
+              },
+              body: JSON.stringify({ fotos_urls: urls })
+            });
+          }
+        }
+
         await syncQueue();
         setPendingCount(getQueue().length);
       } catch {
