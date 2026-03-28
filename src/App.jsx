@@ -369,6 +369,73 @@ const CustomSelect = ({ label, value, onChange, options, disabled, placeholder }
   );
 };
 
+const SearchSelect = ({ label, value, onChange, options, disabled, placeholder }) => {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const inputRef = React.useRef();
+  const filtered = options.filter(o => o.toLowerCase().includes(query.toLowerCase()));
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <Label>{label}</Label>
+      <div
+        onClick={() => { if (!disabled) { setOpen(true); setTimeout(() => inputRef.current?.focus(), 50); } }}
+        style={{
+          ...inputBase, display: "flex", justifyContent: "space-between", alignItems: "center",
+          cursor: disabled ? "not-allowed" : "pointer",
+          opacity: disabled ? 0.5 : 1,
+          border: `1.5px solid ${value ? C.accent : C.border}`,
+          color: value ? C.text : C.textFaint,
+        }}
+      >
+        <span>{value || placeholder}</span>
+        {value
+          ? <span onClick={e => { e.stopPropagation(); onChange(""); setQuery(""); }} style={{ fontSize: 14, color: C.textFaint, padding: "0 2px", cursor: "pointer" }}>✕</span>
+          : <span style={{ fontSize: 12, color: C.textFaint }}>🔍</span>
+        }
+      </div>
+      {open && (
+        <div style={{
+          background: C.surface, border: `1.5px solid ${C.accent}`,
+          borderRadius: 10, marginTop: 4, zIndex: 999, position: "relative",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.15)"
+        }}>
+          <div style={{ padding: "8px 10px", borderBottom: `1px solid ${C.border}` }}>
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Escribir para buscar..."
+              style={{ width: "100%", background: C.inputBg, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", fontFamily: SANS, fontSize: 13, color: C.text, outline: "none", boxSizing: "border-box" }}
+            />
+          </div>
+          <div style={{ maxHeight: 200, overflowY: "auto" }}>
+            {filtered.length === 0
+              ? <div style={{ padding: "14px 16px", fontFamily: SANS, fontSize: 13, color: C.textFaint }}>Sin resultados</div>
+              : filtered.map(opt => (
+                <div key={opt} onClick={() => { onChange(opt); setOpen(false); setQuery(""); }}
+                  style={{
+                    padding: "13px 16px", fontFamily: SANS, fontSize: 14,
+                    color: opt === value ? C.accent : C.text,
+                    background: opt === value ? C.accentLight : "transparent",
+                    borderBottom: `1px solid ${C.border}40`,
+                    fontWeight: opt === value ? 700 : 400,
+                    cursor: "pointer",
+                  }}>
+                  {opt}
+                </div>
+              ))
+            }
+          </div>
+          <div onClick={() => { setOpen(false); setQuery(""); }} style={{ padding: "10px 16px", borderTop: `1px solid ${C.border}`, fontFamily: SANS, fontSize: 12, color: C.textFaint, cursor: "pointer", textAlign: "center" }}>
+            Cerrar
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const NumInput = ({ label, unit, value, onChange, placeholder = "0" }) => (
   <div style={{ flex: 1 }}>
     <Label>{label}</Label>
@@ -892,14 +959,14 @@ function AppInner({ session, onLogout }) {
             />
           )}
           {data.campo && (
-            <CustomSelect
+            <SearchSelect
               label="Lote *"
               value={data.lote}
               onChange={v => {
                 set("lote", v);
-                setHistorial([]); setMostrarHistorial(false); fetchHistorial(v);
+                setHistorial([]); setMostrarHistorial(false); if (v) fetchHistorial(v);
                 // GPS automático al seleccionar lote
-                if (navigator.geolocation) {
+                if (v && navigator.geolocation) {
                   setGpsLoading(true);
                   navigator.geolocation.getCurrentPosition(
                     pos => { setGps({ lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6), acc: Math.round(pos.coords.accuracy) }); setGpsLoading(false); },
@@ -909,7 +976,7 @@ function AppInner({ session, onLogout }) {
                 }
               }}
               options={EMPRESAS.find(e => e.empresa === data.empresa)?.campos.find(c => c.campo === data.campo)?.lotes || []}
-              placeholder="Seleccionar lote..."
+              placeholder="Buscar lote..."
             />
           )}
           <CustomSelect
@@ -951,6 +1018,40 @@ function AppInner({ session, onLogout }) {
             </button>
           </div>
         </SECTION>
+
+        {/* ── HISTORIAL OFFLINE DEL DÍA ── */}
+        {(() => {
+          const cola = getQueue().filter(m => m.lote === data.lote && m.fecha === data.fecha);
+          if (!data.lote || cola.length === 0) return null;
+          return (
+            <div style={{ background: C.card, border: `1.5px solid ${C.warn}60`, borderRadius: 16, overflow: "hidden", marginBottom: 14 }}>
+              <div style={{ background: C.warnLight, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 18 }}>📋</span>
+                <span style={{ fontFamily: FONT, fontSize: 12, fontWeight: 700, color: C.warn, letterSpacing: 2 }}>
+                  PENDIENTES HOY — {data.lote}
+                </span>
+                <span style={{ background: C.warn, color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: 10, padding: "1px 7px", fontFamily: FONT }}>
+                  {cola.length}
+                </span>
+              </div>
+              <div style={{ padding: "10px 16px" }}>
+                {cola.map((m, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: i < cola.length - 1 ? 8 : 0, marginBottom: i < cola.length - 1 ? 8 : 0, borderBottom: i < cola.length - 1 ? `1px solid ${C.border}` : "none" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 12 }}>⏳</span>
+                      <span style={{ fontFamily: FONT, fontSize: 12, color: C.text, fontWeight: 700 }}>Estación {m.estacion_muestreo || i+1}</span>
+                      {m.cultivo && <span style={{ fontSize: 11, color: C.textFaint }}>{m.cultivo}</span>}
+                    </div>
+                    <span style={{ fontSize: 11, color: C.warn, fontFamily: FONT }}>{m.hora || ""}</span>
+                  </div>
+                ))}
+                <div style={{ marginTop: 8, fontSize: 11, color: C.textFaint, textAlign: "center" }}>
+                  Sin conexión — se enviará automáticamente
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── HISTORIAL DEL LOTE ── */}
         {data.lote && (historialLoading || historial.length > 0) && (
