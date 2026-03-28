@@ -231,10 +231,9 @@ const EMPRESAS = [
     { campo: "LASTRA", lotes: ["LASTRA 1","LASTRA 2","ZULEMA LASTRA"] },
   ]},
   { empresa: "AGROCORSI", campos: [
-    { campo: "AGROCORSI", lotes: ["ANTONELLA","MARTINEZ"] },
-    { campo: "EL PAMPA", lotes: ["V1A","V1B","V2","V3","V4","V5","V6","V7","V8","V9","V10A","V10B","V11"] },
-    { campo: "SAN PEDRO", lotes: ["1","2","3","4","5","6","7","8","9","10","11A","11B","11C","12"] },
-    { campo: "LAS MARIAS", lotes: ["LOTE 1"] },
+    { campo: "AÑATUYA", lotes: ["ANTONELLA","MARTINEZ"] },
+    { campo: "VILELAS", lotes: ["V1A","V1B","V2","V3","V4","V5","V6","V7","V8","V9","V10A","V10B","V11","1","2","3","4","5","6","7","8","9","10","11A","11B","11C","12"] },
+    { campo: "CASARES", lotes: ["LOTE 1"] },
   ]},
   { empresa: "GREGORET HNOS", campos: [
     { campo: "BANDERA", lotes: ["LA CUÑA","EL SUIZO","ESTANCIA","LA PERSEVERANCIA","NORMA QUIROZ","LA PAMPITA","CASTAÑO","FIORI","FIORI RICARDO","FIORI ANTONIO","SAN PABLO","ROMAN","ANAYA"] },
