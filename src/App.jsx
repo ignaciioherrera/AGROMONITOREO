@@ -1,4 +1,4 @@
-// AGRO·MONITOR Monitoreador v2.2 — Fix foto upload
+// AGRO·MONITOR Monitoreador v2.3 — Buscador lote + BERTOLI VARRONE
 import React, { useState, useRef, useEffect } from "react";
 
 const SUPABASE_URL = "https://izijmjntrpksmzuwvtle.supabase.co";
