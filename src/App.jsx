@@ -1390,8 +1390,21 @@ function AppInner({ session, onLogout }) {
                 )}
                 {mostrar("aranhuelas") && (
                   <PlagaRow title="Arañuelas / Ácaros">
-                    <div style={{ fontSize: 11, color: "#5a7a5e", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>Cabecera y dentro del lote</div>
                     <NivelSelect value={data.aranhuelas} onChange={v => set("aranhuelas", v)} />
+                    <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+                      {["CABECERA", "DENTRO DEL LOTE"].map(op => (
+                        <div key={op} onClick={() => set("aranhuelasDano", data.aranhuelasDano === op ? "" : op)}
+                          style={{
+                            flex: 1, textAlign: "center", padding: "10px 6px", borderRadius: 10, cursor: "pointer",
+                            border: `1.5px solid ${data.aranhuelasDano === op ? "#2d7a3a" : "#dde5d8"}`,
+                            background: data.aranhuelasDano === op ? "#eaf4ec" : "#f4f6f3",
+                            color: data.aranhuelasDano === op ? "#2d7a3a" : "#94b09a",
+                            fontFamily: "'DM Sans', sans-serif", fontSize: 12,
+                            fontWeight: data.aranhuelasDano === op ? 700 : 400,
+                            transition: "all 0.15s", userSelect: "none"
+                          }}>{op}</div>
+                      ))}
+                    </div>
                   </PlagaRow>
                 )}
                 {mostrar("caracol") && (
