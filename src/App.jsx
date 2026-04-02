@@ -239,23 +239,21 @@ const EMPRESAS = [
     { campo: "SAN PEDRO", lotes: ["1","2","3","4","5","6","7","8","9","10","11A","11B","11C","12"] },
   ]},
   { empresa: "BERTOLI VARRONE", campos: [
-    { campo: "BERTOLI VARRONE", lotes: [
-      "QUEBRACHO 1 (Q1)","QUEBRACHO 4 (Q4)","QUEBRACHO 3 (Q3)",
-      "TIERRAS DEL OESTE 1","TIERRAS DEL OESTE 2","TIERRAS DEL OESTE 3","TIERRAS DEL OESTE 4","TIERRAS DEL OESTE 5","TIERRAS DEL OESTE 6","TIERRAS DEL OESTE 7","TIERRAS DEL OESTE 8","TIERRAS DEL OESTE 9","TIERRAS DEL OESTE 10","TIERRAS DEL OESTE 11","TIERRAS DEL OESTE 12","TIERRAS DEL OESTE 13","TIERRAS DEL OESTE 14","TIERRAS DEL OESTE 15",
-      "LA CRISTIANI 1",
-      "URUNDAY 1 (U1)","URUNDAY 2 (U2)","URUNDAY 4 (U4)","URUNDAY 3 (U3)","URUNDAY 6 (U6)","URUNDAY 7 (U7)","URUNDAY 5 (U5)",
-      "SANTA MARIA 1 (SM1)","SANTA MARIA 5 (SM5)","SANTA MARIA 3 (SM3)","SANTA MARIA 2 (SM2)","SANTA MARIA 4 (SM4)",
-      "GOROSITO (GO)",
-      "LOS CORDOBESES 1 (LC1)","LOS CORDOBESES 2 (LC2)","LOS CORDOBESES 13 (LC13)","LOS CORDOBESES 3 (LC3)","LOS CORDOBESES 4 (LC4)","LOS CORDOBESES 5 (LC5)","LOS CORDOBESES 15 (LC15)","LOS CORDOBESES 17 (LC17)",
-      "ABRAHAM (A1)","CARDOZO (C1)","CORDERO A","QUIMIL",
-      "PANAMBI 2 (PA2)","PANAMBI 1 (PA1)",
-      "VARGAS ETEL 3 (EV3)","VARGAS ETEL 1 (EV1)","ETEL VARGAS 2 (EV2)",
-      "LEGUIZAMON (L1)","LA PIAMONTESA (LP1)","LA PIAMONTESA (LP2)",
-      "FIORI (F1)","GAUTO (G1)","DOMINGO LOPEZ (DL)","KAKUY (K1)","JUVENCIO",
-      "LA JUANITA 1 (LJ1)","LA JUANITA 2 (LJ2)","LA JUANITA 3 (LJ3)",
-      "PERALTA","LA GRATITUD 2","LA GRATITUD 1 (LG1)","LA GRATITUD CAMPO NUEVO",
-      "OLIVER GABRIEL","EL SIN QUERER"
-    ] },
+    { campo: "BERTOLI VARRONE", subzonas: [
+      { subzona: "BANDERA", lotes: ["PANAMBI 1 (PA1)","PANAMBI 2 (PA2)","QUIMIL","CORDERO A","EL SIN QUERER","CARDOZO (C1)"] },
+      { subzona: "LINARES", lotes: ["QUEBRACHO 1 (Q1)","QUEBRACHO 3 (Q3)","QUEBRACHO 4 (Q4)","TIERRAS DEL OESTE 1","TIERRAS DEL OESTE 2","TIERRAS DEL OESTE 3","TIERRAS DEL OESTE 4","TIERRAS DEL OESTE 5","TIERRAS DEL OESTE 6","TIERRAS DEL OESTE 7","TIERRAS DEL OESTE 8","TIERRAS DEL OESTE 9","TIERRAS DEL OESTE 10","TIERRAS DEL OESTE 11","TIERRAS DEL OESTE 12","TIERRAS DEL OESTE 13","TIERRAS DEL OESTE 14","TIERRAS DEL OESTE 15","LA GRATITUD 1 (LG1)","LA GRATITUD 2","LA GRATITUD CAMPO NUEVO"] },
+      { subzona: "VILLA MINETTI", lotes: ["LA JUANITA 1 (LJ1)","LA JUANITA 2 (LJ2)","LA JUANITA 3 (LJ3)"] },
+      { subzona: "LOS CORDOBESES", lotes: [
+        "URUNDAY 1 (U1)","URUNDAY 2 (U2)","URUNDAY 3 (U3)","URUNDAY 4 (U4)","URUNDAY 5 (U5)","URUNDAY 6 (U6)","URUNDAY 7 (U7)",
+        "SANTA MARIA 1 (SM1)","SANTA MARIA 2 (SM2)","SANTA MARIA 3 (SM3)","SANTA MARIA 4 (SM4)","SANTA MARIA 5 (SM5)",
+        "GOROSITO (GO)",
+        "LOS CORDOBESES 1 (LC1)","LOS CORDOBESES 2 (LC2)","LOS CORDOBESES 3 (LC3)","LOS CORDOBESES 4 (LC4)","LOS CORDOBESES 5 (LC5)","LOS CORDOBESES 13 (LC13)","LOS CORDOBESES 15 (LC15)","LOS CORDOBESES 17 (LC17)",
+        "ABRAHAM (A1)","VARGAS ETEL 1 (EV1)","VARGAS ETEL 3 (EV3)","ETEL VARGAS 2 (EV2)",
+        "LEGUIZAMON (L1)","LA PIAMONTESA (LP1)","LA PIAMONTESA (LP2)",
+        "FIORI (F1)","GAUTO (G1)","DOMINGO LOPEZ (DL)","KAKUY (K1)","JUVENCIO",
+        "PERALTA","OLIVER GABRIEL"
+      ] },
+    ], lotes: [] },
   ]},
   { empresa: "FERNANDO PIGHIN 2", campos: [
     { campo: "EST. EL PROGRESO", lotes: ["LOTE 1","LOTE 3","LOTE 5","2A","2B","LOTE 4A","LOTE 4B","FERNANDO 5"] },
@@ -696,6 +694,7 @@ function AppInner({ session, onLogout }) {
     return () => window.removeEventListener("online", trySync);
   }, []);
 
+  const [subzona, setSubzona] = useState("");
   const [data, setData] = useState({
     empresa: "", campo: "", lote: "", cultivo: "",
     fecha: new Date().toISOString().split("T")[0],
@@ -922,7 +921,7 @@ function AppInner({ session, onLogout }) {
   const reset = () => {
     setStep("form"); setPhotos([]); setGps(null);
     // Mantiene empresa, campo y fecha para seguir la jornada — solo limpia lote y datos
-    setData(p => ({ ...p, lote: "", cultivo: "", estacionMuestreo: "", plantasPorMetro: "", distanciaEntresurco: "", estadioFenologico: "", cobertura: "", vuelco: false, isocas: "", isocasDano: "", chinches: "", chinchesDano: "", pulgones: "", pulgonesDano: "", trips: "", tripsDano: "", aranhuelas: "", aranhuelasDano: "", chicharrita: "", chicharritaDano: "", cogollero: "", cogolleroDano: "", caracol: "", caracolDano: "", otraPlaga: "", otraPlagaCantidad: "", enfermedades: [], enfermedadIntensidad: 0, enfermedadNota: "", malezas: [], malezaCobertura: "", malezaNota: "", estresHidrico: 0, danoHerbicida: false, danoHerbicidaNota: "", danoGranizo: false, danoGranizoNota: "", observaciones: "", recomendaciones: "" }));
+    setSubzona(""); setData(p => ({ ...p, lote: "", cultivo: "", estacionMuestreo: "", plantasPorMetro: "", distanciaEntresurco: "", estadioFenologico: "", cobertura: "", vuelco: false, isocas: "", isocasDano: "", chinches: "", chinchesDano: "", pulgones: "", pulgonesDano: "", trips: "", tripsDano: "", aranhuelas: "", aranhuelasDano: "", chicharrita: "", chicharritaDano: "", cogollero: "", cogolleroDano: "", caracol: "", caracolDano: "", otraPlaga: "", otraPlagaCantidad: "", enfermedades: [], enfermedadIntensidad: 0, enfermedadNota: "", malezas: [], malezaCobertura: "", malezaNota: "", estresHidrico: 0, danoHerbicida: false, danoHerbicidaNota: "", danoGranizo: false, danoGranizoNota: "", observaciones: "", recomendaciones: "" }));
     setHistorial([]); setMostrarHistorial(false);
   };
 
@@ -1049,32 +1048,56 @@ function AppInner({ session, onLogout }) {
             <CustomSelect
               label="Campo *"
               value={data.campo}
-              onChange={v => { set("campo", v); set("lote", ""); }}
+              onChange={v => { set("campo", v); set("lote", ""); setSubzona(""); }}
               options={EMPRESAS.find(e => e.empresa === data.empresa)?.campos.map(c => c.campo) || []}
               placeholder="Seleccionar campo..."
             />
           )}
-          {data.campo && (
-            <SearchSelect
-              label="Lote *"
-              value={data.lote}
-              onChange={v => {
-                set("lote", v);
-                setHistorial([]); setMostrarHistorial(false); if (v) fetchHistorial(v);
-                // GPS automático al seleccionar lote
-                if (v && navigator.geolocation) {
-                  setGpsLoading(true);
-                  navigator.geolocation.getCurrentPosition(
-                    pos => { setGps({ lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6), acc: Math.round(pos.coords.accuracy) }); setGpsLoading(false); },
-                    () => { setGpsLoading(false); },
-                    { enableHighAccuracy: true, timeout: 8000 }
-                  );
-                }
-              }}
-              options={EMPRESAS.find(e => e.empresa === data.empresa)?.campos.find(c => c.campo === data.campo)?.lotes || []}
-              placeholder="Buscar lote..."
-            />
-          )}
+          {data.campo && (() => {
+            const campoData = EMPRESAS.find(e => e.empresa === data.empresa)?.campos.find(c => c.campo === data.campo);
+            const hasSubzonas = campoData?.subzonas?.length > 0;
+            const onLoteChange = v => {
+              set("lote", v);
+              setHistorial([]); setMostrarHistorial(false); if (v) fetchHistorial(v);
+              if (v && navigator.geolocation) {
+                setGpsLoading(true);
+                navigator.geolocation.getCurrentPosition(
+                  pos => { setGps({ lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6), acc: Math.round(pos.coords.accuracy) }); setGpsLoading(false); },
+                  () => { setGpsLoading(false); },
+                  { enableHighAccuracy: true, timeout: 8000 }
+                );
+              }
+            };
+            if (hasSubzonas) return (
+              <>
+                <SearchSelect
+                  label="Sub-zona *"
+                  value={subzona}
+                  onChange={v => { setSubzona(v); set("lote", ""); }}
+                  options={campoData.subzonas.map(s => s.subzona)}
+                  placeholder="Seleccionar sub-zona..."
+                />
+                {subzona && (
+                  <SearchSelect
+                    label="Lote *"
+                    value={data.lote}
+                    onChange={onLoteChange}
+                    options={campoData.subzonas.find(s => s.subzona === subzona)?.lotes || []}
+                    placeholder="Buscar lote..."
+                  />
+                )}
+              </>
+            );
+            return (
+              <SearchSelect
+                label="Lote *"
+                value={data.lote}
+                onChange={onLoteChange}
+                options={campoData?.lotes || []}
+                placeholder="Buscar lote..."
+              />
+            );
+          })()}
           <CustomSelect
             label="Cultivo que está monitoreando *"
             value={data.cultivo}
