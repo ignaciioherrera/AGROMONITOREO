@@ -495,31 +495,22 @@ const ESPECIES = {
 };
 
 function EspeciesRef({ plaga }) {
-  const [open, setOpen] = React.useState(false);
   const lista = ESPECIES[plaga];
   if (!lista) return null;
   return (
-    <div style={{ marginBottom: 8 }}>
-      <button onClick={() => setOpen(o => !o)}
-        style={{ background: "none", border: "none", color: C.accent, fontFamily: SANS, fontSize: 11, fontWeight: 600, cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 4 }}>
-        {open ? "▲" : "▼"} Ver especies principales
-      </button>
-      {open && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
-          {lista.map((e, i) => (
-            <div key={i} style={{ background: C.inputBg, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-              <img src={e.foto} alt={e.nombre}
-                style={{ width: "100%", height: 80, objectFit: "cover", display: "block" }}
-                onError={ev => { ev.target.style.display = "none"; }}
-              />
-              <div style={{ padding: "6px 8px" }}>
-                <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: C.text }}>{e.comun}</div>
-                <div style={{ fontFamily: SANS, fontSize: 10, color: C.textFaint, fontStyle: "italic" }}>{e.nombre}</div>
-              </div>
-            </div>
-          ))}
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+      {lista.map((e, i) => (
+        <div key={i} style={{ background: C.inputBg, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", display: "flex", alignItems: "center", gap: 8, padding: 6 }}>
+          <img src={e.foto} alt={e.nombre}
+            style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 7, flexShrink: 0 }}
+            onError={ev => { ev.target.style.display = "none"; }}
+          />
+          <div>
+            <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: C.text, lineHeight: 1.2 }}>{e.comun}</div>
+            <div style={{ fontFamily: SANS, fontSize: 10, color: C.textFaint, fontStyle: "italic", lineHeight: 1.3, marginTop: 2 }}>{e.nombre}</div>
+          </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }
@@ -1281,7 +1272,7 @@ function AppInner({ session, onLogout }) {
                 )}
                 {mostrar("isocas") && (
                   <PlagaRow title="Isocas / Orugas" especiesPlaga="isocas">
-                    <div style={{ display: "flex", gap: 10 }}><NumInput label="Cantidad / metro" unit="/m" value={data.isocas} onChange={v => set("isocas", v)} /><NumInput label="% defoliación" unit="%" value={data.isocasDano} onChange={v => set("isocasDano", v)} /></div>
+                    <NumInput label="Cantidad / metro" unit="/m" value={data.isocas} onChange={v => set("isocas", v)} />
                   </PlagaRow>
                 )}
                 {mostrar("chinches") && (
