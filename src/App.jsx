@@ -227,36 +227,51 @@ const FONT = `'DM Mono', 'Courier New', monospace`;
 const SANS = `'DM Sans', 'Segoe UI', sans-serif`;
 
 const EMPRESAS = [
-  { empresa: "IGNACIO HERRERA", campos: [
-    { campo: "LASTRA", lotes: ["LASTRA 1","LASTRA 2","ZULEMA LASTRA"] },
+  { empresa: "HERRERA IGNACIO", campos: [
+    { campo: "LASTRA", lotes: ["1","2","LASTRA ZULEMA"] },
   ]},
   { empresa: "AGROCORSI", campos: [
-    { campo: "AÑATUYA", lotes: ["ANTONELLA","MARTINEZ"] },
-    { campo: "EL PAMPA", lotes: ["V1A","V1B","V2","V3","V4","V5","V6","V7","V8","V9","V10A","V10B","V11"] },
+    { campo: "ANTONELLA", lotes: ["LOTE A1","LOTE A2"] },
+    { campo: "EL PAMPA", lotes: ["LOTE V1A","LOTE V1B","V2","V3","V4","V5","V6","V7","V8","V9","V10A","V10B","V11"] },
+    { campo: "INTIGUATANA", lotes: ["INTIGUATANA"] },
+    { campo: "LAS MARIAS", lotes: ["LAS MARIA"] },
+    { campo: "MARTINEZ", lotes: ["1"] },
     { campo: "SAN PEDRO", lotes: ["1","2","3","4","5","6","7","8","9","10","11A","11B","11C","12"] },
-    { campo: "LAS MARIAS", lotes: ["LOTE 1"] },
-  ]},
-  { empresa: "GREGORET HNOS", campos: [
-    { campo: "BANDERA", lotes: ["LA CUÑA","EL SUIZO","ESTANCIA","LA PERSEVERANCIA","NORMA QUIROZ","LA PAMPITA","CASTAÑO","FIORI","FIORI RICARDO","FIORI ANTONIO","SAN PABLO","ROMAN","ANAYA"] },
-  ]},
-  { empresa: "PIGHIN FERNANDO", campos: [
-    { campo: "LA LUNA", lotes: ["1","2","3","4","5","6","7","8"] },
-    { campo: "EL PROGRESO", lotes: ["1","2A","2B","3","4A","4B","5"] },
   ]},
   { empresa: "BERTOLI VARRONE", campos: [
-    { campo: "BANDERA", lotes: ["PANAMBI 1","PANAMBI 2","QUIMIL","CORDERO A","EL SIN QUERER","FIORI 1","CARDOZO"] },
-    { campo: "LINARES", lotes: ["LA GRATITUD 1","LA GRATITUD 2","LA GRATITUD 3","LA GRATITUD 4","LA GRATITUD 5","LA GRATITUD 6","QUEBRACHO 1","QUEBRACHO 3","QUEBRACHO 4","TIERRA DEL OESTE 1","TIERRA DEL OESTE 2","TIERRA DEL OESTE 3-5","TIERRA DEL OESTE 4","TIERRA DEL OESTE 6","TIERRA DEL OESTE 7","TIERRA DEL OESTE 8-12","TIERRA DEL OESTE 10","TIERRA DEL OESTE 13","TIERRA DEL OESTE 14","TIERRA DEL OESTE 15"] },
-    { campo: "LOS CORDOBESES", lotes: ["ABRAHAM 1","DOMINGO LOPEZ 1","GAUTO 1","GOROSITO 1","JUVENCIO 1","KAKUY 1","LA PIAMONTESA 1","LA PIAMONTESA 2","LEGUIZAMON 1","LOS CORDOBESES 1","LOS CORDOBESES 2","LOS CORDOBESES 3","LOS CORDOBESES 5","LOS CORDOBESES 13","LOS CORDOBESES 15","PERALTA 1","SANTA MARIA 1","SANTA MARIA 2","SANTA MARIA 3","SANTA MARIA 4","SANTA MARIA 5","URUNDAY 1","URUNDAY 2","URUNDAY 3","URUNDAY 4A","URUNDAY 4B","URUNDAY 5","URUNDAY 6","URUNDAY 7","VARGAS ETEL 1","VARGAS ETEL 2","VARGAS ETEL 3"] },
-    { campo: "VILLA MINETTI", lotes: ["LA JUANITA 1","LA JUANITA 2"] },
+    { campo: "BERTOLI VARRONE", lotes: [
+      "QUEBRACHO 1 (Q1)","QUEBRACHO 4 (Q4)","QUEBRACHO 3 (Q3)",
+      "TIERRAS DEL OESTE 1","TIERRAS DEL OESTE 2","TIERRAS DEL OESTE 3","TIERRAS DEL OESTE 4","TIERRAS DEL OESTE 5","TIERRAS DEL OESTE 6","TIERRAS DEL OESTE 7","TIERRAS DEL OESTE 8","TIERRAS DEL OESTE 9","TIERRAS DEL OESTE 10","TIERRAS DEL OESTE 11","TIERRAS DEL OESTE 12","TIERRAS DEL OESTE 13","TIERRAS DEL OESTE 14","TIERRAS DEL OESTE 15",
+      "LA CRISTIANI 1",
+      "URUNDAY 1 (U1)","URUNDAY 2 (U2)","URUNDAY 4 (U4)","URUNDAY 3 (U3)","URUNDAY 6 (U6)","URUNDAY 7 (U7)","URUNDAY 5 (U5)",
+      "SANTA MARIA 1 (SM1)","SANTA MARIA 5 (SM5)","SANTA MARIA 3 (SM3)","SANTA MARIA 2 (SM2)","SANTA MARIA 4 (SM4)",
+      "GOROSITO (GO)",
+      "LOS CORDOBESES 1 (LC1)","LOS CORDOBESES 2 (LC2)","LOS CORDOBESES 13 (LC13)","LOS CORDOBESES 3 (LC3)","LOS CORDOBESES 4 (LC4)","LOS CORDOBESES 5 (LC5)","LOS CORDOBESES 15 (LC15)","LOS CORDOBESES 17 (LC17)",
+      "ABRAHAM (A1)","CARDOZO (C1)","CORDERO A","QUIMIL",
+      "PANAMBI 2 (PA2)","PANAMBI 1 (PA1)",
+      "VARGAS ETEL 3 (EV3)","VARGAS ETEL 1 (EV1)","ETEL VARGAS 2 (EV2)",
+      "LEGUIZAMON (L1)","LA PIAMONTESA (LP1)","LA PIAMONTESA (LP2)",
+      "FIORI (F1)","GAUTO (G1)","DOMINGO LOPEZ (DL)","KAKUY (K1)","JUVENCIO",
+      "LA JUANITA 1 (LJ1)","LA JUANITA 2 (LJ2)","LA JUANITA 3 (LJ3)",
+      "PERALTA","LA GRATITUD 2","LA GRATITUD 1 (LG1)","LA GRATITUD CAMPO NUEVO",
+      "OLIVER GABRIEL","EL SIN QUERER"
+    ] },
   ]},
-  { empresa: "GOROSITO/SIGOTO/BERTOLI", campos: [
-    { campo: "EL OCASO", lotes: ["OCASO LOTE 1 ESTE","OCASO LOTE 2 OESTE"] },
+  { empresa: "FERNANDO PIGHIN 2", campos: [
+    { campo: "EST. EL PROGRESO", lotes: ["LOTE 1","LOTE 3","LOTE 5","2A","2B","LOTE 4A","LOTE 4B","FERNANDO 5"] },
+    { campo: "EST. LA LUNA", lotes: ["FERNANDO 1","FERNANDO 2","FERNANDO 3","FERNANDO 4","FERNANDO 6","FERNANDO 7","FERNANDO 8","LOTE NUEVO"] },
   ]},
   { empresa: "GIANFRANCO BERTOLI", campos: [
-    { campo: "TIERRAS DEL OESTE PUPI", lotes: ["LINARES GIANFRANCO BERTOLI"] },
+    { campo: "TIERRAS DEL OESTE", lotes: ["LOTE 1","LOTE 2"] },
   ]},
-  { empresa: "VACHETTA", campos: [
-    { campo: "DON ALBINO", lotes: ["1","2"] },
+  { empresa: "GREGORET HNOS", campos: [
+    { campo: "GREGORET HNOS", lotes: ["LA CUÑA","EL SUIZO","FIORI","FIORI","ANTONIO FIORI","SAN PABLO","ESTANCIA GREGORET","LA PERSEVERANCIA","NORMA QUIROZ","CASTAÑO","LA PAMPITA","NORA ANAYA","ROMAN"] },
+  ]},
+  { empresa: "SIGOTO/GOROSITO/BERTOLI", campos: [
+    { campo: "EL OCASO", lotes: ["1 ESTE","2 OESTE"] },
+  ]},
+  { empresa: "VACHETTA JORGE", campos: [
+    { campo: "DON ALBINO", lotes: ["LOTE 1","LOTE 2"] },
   ]},
 ];
 const CAMPOS = EMPRESAS.flatMap(e => e.campos.map(c => ({ ...c, empresa: e.empresa })));
