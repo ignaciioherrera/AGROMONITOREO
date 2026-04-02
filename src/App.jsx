@@ -489,26 +489,52 @@ const ESPECIES = {
   chinches: [
     { nombre: "Nezara viridula", comun: "Chinche verde", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Nezara_viridula_-_Pentatoma_viridula_-_Stinkwanze_%28detail%29.jpg/320px-Nezara_viridula_-_Pentatoma_viridula_-_Stinkwanze_%28detail%29.jpg" },
     { nombre: "Piezodorus guildinii", comun: "Chinche de la alfalfa", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Piezodorus_guildinii.jpg/320px-Piezodorus_guildinii.jpg" },
-    { nombre: "Dichelops furcatus", comun: "Chinche del tallo", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Dichelops_furcatus.jpg/320px-Dichelops_furcatus.jpg" },
-    { nombre: "Edessa meditabunda", comun: "Chinche de cuernitos", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Edessa_meditabunda.jpg/320px-Edessa_meditabunda.jpg" },
+    { nombre: "Dichelops furcatus", comun: "Chinche de cuernitos", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Dichelops_furcatus.jpg/320px-Dichelops_furcatus.jpg" },
+    { nombre: "Edessa meditabunda", comun: "Chinche chico", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Edessa_meditabunda.jpg/320px-Edessa_meditabunda.jpg" },
   ],
 };
 
-function EspeciesRef({ plaga }) {
+function EspeciesRef({ plaga, onCount }) {
   const lista = ESPECIES[plaga];
+  const [counts, setCounts] = React.useState(lista ? lista.map(() => 0) : []);
   if (!lista) return null;
+  const tap = (i) => {
+    const next = [...counts];
+    next[i] += 1;
+    setCounts(next);
+    if (onCount) onCount(next.reduce((a, b) => a + b, 0));
+  };
+  const reset = (i) => {
+    const next = [...counts];
+    next[i] = 0;
+    setCounts(next);
+    const newTotal = next.reduce((a, b) => a + b, 0);
+    if (onCount) onCount(newTotal);
+  };
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
       {lista.map((e, i) => (
-        <div key={i} style={{ background: C.inputBg, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", display: "flex", alignItems: "center", gap: 8, padding: 6 }}>
+        <div key={i}
+          onClick={() => tap(i)}
+          style={{ background: counts[i] > 0 ? C.accentLight : C.inputBg, border: `1.5px solid ${counts[i] > 0 ? C.accent : C.border}`, borderRadius: 10, overflow: "hidden", display: "flex", alignItems: "center", gap: 8, padding: 6, cursor: "pointer", userSelect: "none", transition: "all 0.15s", position: "relative" }}>
           <img src={e.foto} alt={e.nombre}
             style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 7, flexShrink: 0 }}
             onError={ev => { ev.target.style.display = "none"; }}
           />
-          <div>
+          <div style={{ flex: 1 }}>
             <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: C.text, lineHeight: 1.2 }}>{e.comun}</div>
             <div style={{ fontFamily: SANS, fontSize: 10, color: C.textFaint, fontStyle: "italic", lineHeight: 1.3, marginTop: 2 }}>{e.nombre}</div>
+            {counts[i] > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+                <span style={{ fontFamily: FONT, fontSize: 15, fontWeight: 700, color: C.accent }}>{counts[i]}</span>
+                <button onClick={e => { e.stopPropagation(); reset(i); }}
+                  style={{ background: "none", border: "none", color: C.textFaint, fontSize: 11, cursor: "pointer", padding: 0, lineHeight: 1 }}>✕</button>
+              </div>
+            )}
           </div>
+          {counts[i] > 0 && (
+            <div style={{ position: "absolute", top: 5, right: 7, background: C.accent, color: "#fff", borderRadius: "50%", width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, fontFamily: FONT }}>{counts[i]}</div>
+          )}
         </div>
       ))}
     </div>
@@ -519,7 +545,7 @@ const PlagaRow = ({ title, scientific, children, last, especiesPlaga }) => (
   <div style={{ paddingBottom: 14, marginBottom: last ? 0 : 14, borderBottom: last ? "none" : `1px solid ${C.border}` }}>
     <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: C.text, marginBottom: scientific ? 2 : 8 }}>{title}</div>
     {scientific && <div style={{ fontFamily: SANS, fontSize: 11, color: C.textFaint, marginBottom: 8, fontStyle: "italic" }}>{scientific}</div>}
-    {especiesPlaga && <EspeciesRef plaga={especiesPlaga} />}
+    {especiesPlaga && <EspeciesRef plaga={especiesPlaga} onCount={v => { if(especiesPlaga==="isocas") set("isocas", v); if(especiesPlaga==="chinches") set("chinches", v); }} />}
     {children}
   </div>
 );
