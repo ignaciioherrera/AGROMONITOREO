@@ -481,16 +481,16 @@ const CheckGrid = ({ items, selected, onChange }) => (
 
 const ESPECIES = {
   isocas: [
-    { nombre: "Anticarsia gemmatalis", comun: "Oruga de la soja", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Anticarsia_gemmatalis_larva.jpg/320px-Anticarsia_gemmatalis_larva.jpg" },
-    { nombre: "Rachiplusia nu", comun: "Oruga medidora", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Rachiplusia_nu.jpg/320px-Rachiplusia_nu.jpg" },
-    { nombre: "Spodoptera frugiperda", comun: "Oruga cogollera", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Spodoptera_frugiperda_caterpillar.jpg/320px-Spodoptera_frugiperda_caterpillar.jpg" },
-    { nombre: "Helicoverpa gelotopoeon", comun: "Bolillera", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Helicoverpa_zea_larva.jpg/320px-Helicoverpa_zea_larva.jpg" },
+    { nombre: "Anticarsia gemmatalis", comun: "Oruga de la soja", foto: "https://inaturalist-open-data.s3.amazonaws.com/photos/202049/medium.jpg" },
+    { nombre: "Rachiplusia nu", comun: "Oruga medidora", foto: "https://inaturalist-open-data.s3.amazonaws.com/photos/6442951/medium.jpg" },
+    { nombre: "Spodoptera frugiperda", comun: "Oruga cogollera", foto: "https://inaturalist-open-data.s3.amazonaws.com/photos/1491753/medium.jpg" },
+    { nombre: "Helicoverpa gelotopoeon", comun: "Bolillera", foto: "https://inaturalist-open-data.s3.amazonaws.com/photos/9371589/medium.jpg" },
   ],
   chinches: [
-    { nombre: "Nezara viridula", comun: "Chinche verde", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Nezara_viridula_-_Pentatoma_viridula_-_Stinkwanze_%28detail%29.jpg/320px-Nezara_viridula_-_Pentatoma_viridula_-_Stinkwanze_%28detail%29.jpg" },
-    { nombre: "Piezodorus guildinii", comun: "Chinche de la alfalfa", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Piezodorus_guildinii.jpg/320px-Piezodorus_guildinii.jpg" },
-    { nombre: "Dichelops furcatus", comun: "Chinche de cuernitos", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Dichelops_furcatus.jpg/320px-Dichelops_furcatus.jpg" },
-    { nombre: "Edessa meditabunda", comun: "Chinche chico", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Edessa_meditabunda.jpg/320px-Edessa_meditabunda.jpg" },
+    { nombre: "Nezara viridula", comun: "Chinche verde", foto: "https://inaturalist-open-data.s3.amazonaws.com/photos/355995/medium.jpg" },
+    { nombre: "Piezodorus guildinii", comun: "Chinche de la alfalfa", foto: "https://inaturalist-open-data.s3.amazonaws.com/photos/12209492/medium.jpg" },
+    { nombre: "Dichelops furcatus", comun: "Chinche de cuernitos", foto: "https://inaturalist-open-data.s3.amazonaws.com/photos/43763289/medium.jpg" },
+    { nombre: "Edessa meditabunda", comun: "Chinche chico", foto: "https://inaturalist-open-data.s3.amazonaws.com/photos/6982640/medium.jpg" },
   ],
 };
 
@@ -1298,12 +1298,10 @@ function AppInner({ session, onLogout }) {
                 )}
                 {mostrar("isocas") && (
                   <PlagaRow title="Isocas / Orugas" especiesPlaga="isocas">
-                    <NumInput label="Cantidad / metro" unit="/m" value={data.isocas} onChange={v => set("isocas", v)} />
                   </PlagaRow>
                 )}
                 {mostrar("chinches") && (
                   <PlagaRow title="Chinches" especiesPlaga="chinches">
-                    <div style={{ display: "flex", gap: 10 }}><NumInput label="Adultos / metro" unit="/m" value={data.chinches} onChange={v => set("chinches", v)} /><NumInput label="Ninfas / metro" unit="/m" value={data.chinchesDano} onChange={v => set("chinchesDano", v)} /></div>
                   </PlagaRow>
                 )}
                 {mostrar("pulgones") && (
