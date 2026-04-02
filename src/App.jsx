@@ -570,6 +570,23 @@ function EspeciesRef({ plaga, onCount, onDetalle }) {
   );
 }
 
+const NIVELES = ["BAJA", "MEDIA", "ALTA"];
+const NivelSelect = ({ value, onChange }) => (
+  <div style={{ display: "flex", gap: 8 }}>
+    {NIVELES.map(n => (
+      <div key={n} onClick={() => onChange(value === n ? "" : n)}
+        style={{
+          flex: 1, textAlign: "center", padding: "10px 6px", borderRadius: 10, cursor: "pointer",
+          border: `1.5px solid ${value === n ? (n === "ALTA" ? "#c0392b" : n === "MEDIA" ? "#c97a1a" : "#2d7a3a") : "#dde5d8"}`,
+          background: value === n ? (n === "ALTA" ? "#fdecea" : n === "MEDIA" ? "#fef3e0" : "#eaf4ec") : "#f4f6f3",
+          color: value === n ? (n === "ALTA" ? "#c0392b" : n === "MEDIA" ? "#c97a1a" : "#2d7a3a") : "#94b09a",
+          fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: value === n ? 700 : 400,
+          transition: "all 0.15s", userSelect: "none"
+        }}>{n}</div>
+    ))}
+  </div>
+);
+
 const PlagaRow = ({ title, scientific, children, last, especiesPlaga, onSetPlaga, onSetDetalle }) => (
   <div style={{ paddingBottom: 14, marginBottom: last ? 0 : 14, borderBottom: last ? "none" : `1px solid ${C.border}` }}>
     <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: C.text, marginBottom: scientific ? 2 : 8 }}>{title}</div>
@@ -1072,11 +1089,11 @@ function AppInner({ session, onLogout }) {
             if (hasSubzonas) return (
               <>
                 <SearchSelect
-                  label="Sub-zona *"
+                  label="Zona *"
                   value={subzona}
                   onChange={v => { setSubzona(v); set("lote", ""); }}
                   options={campoData.subzonas.map(s => s.subzona)}
-                  placeholder="Seleccionar sub-zona..."
+                  placeholder="Seleccionar zona..."
                 />
                 {subzona && (
                   <SearchSelect
@@ -1363,22 +1380,23 @@ function AppInner({ session, onLogout }) {
                 )}
                 {mostrar("pulgones") && (
                   <PlagaRow title="Pulgones">
-                    <div style={{ display: "flex", gap: 10 }}><NumInput label="Colonias / planta" unit="/pl" value={data.pulgones} onChange={v => set("pulgones", v)} /><NumInput label="% plantas afect." unit="%" value={data.pulgonesDano} onChange={v => set("pulgonesDano", v)} /></div>
+                    <NivelSelect value={data.pulgones} onChange={v => set("pulgones", v)} />
                   </PlagaRow>
                 )}
                 {mostrar("trips") && (
                   <PlagaRow title="Trips">
-                    <div style={{ display: "flex", gap: 10 }}><NumInput label="Cantidad / hoja" unit="/hoja" value={data.trips} onChange={v => set("trips", v)} /><NumInput label="% plantas afect." unit="%" value={data.tripsDano} onChange={v => set("tripsDano", v)} /></div>
+                    <NivelSelect value={data.trips} onChange={v => set("trips", v)} />
                   </PlagaRow>
                 )}
                 {mostrar("aranhuelas") && (
                   <PlagaRow title="Arañuelas / Ácaros">
-                    <div style={{ display: "flex", gap: 10 }}><NumInput label="Focos detectados" value={data.aranhuelas} onChange={v => set("aranhuelas", v)} /><NumInput label="% hoja afectada" unit="%" value={data.aranhuelasDano} onChange={v => set("aranhuelasDano", v)} /></div>
+                    <div style={{ fontSize: 11, color: "#5a7a5e", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>Cabecera y dentro del lote</div>
+                    <NivelSelect value={data.aranhuelas} onChange={v => set("aranhuelas", v)} />
                   </PlagaRow>
                 )}
                 {mostrar("caracol") && (
                   <PlagaRow title="Caracol / Babosa">
-                    <div style={{ display: "flex", gap: 10 }}><NumInput label="Individuos / m²" unit="/m²" value={data.caracol} onChange={v => set("caracol", v)} /><NumInput label="% plantas afect." unit="%" value={data.caracolDano} onChange={v => set("caracolDano", v)} /></div>
+                    <NivelSelect value={data.caracol} onChange={v => set("caracol", v)} />
                   </PlagaRow>
                 )}
                 {mostrar("chicharrita") && (
