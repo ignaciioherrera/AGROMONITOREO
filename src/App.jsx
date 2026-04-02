@@ -240,7 +240,7 @@ const EMPRESAS = [
   ]},
   { empresa: "BERTOLI VARRONE", campos: [
     { campo: "BERTOLI VARRONE", subzonas: [
-      { subzona: "BANDERA", lotes: ["PANAMBI 1 (PA1)","PANAMBI 2 (PA2)","QUIMIL","CORDERO A","EL SIN QUERER","CARDOZO (C1)"] },
+      { subzona: "BANDERA", lotes: ["PANAMBI 1 (PA1)","PANAMBI 2 (PA2)","QUIMIL","CORDERO A","EL SIN QUERER","CARDOZO (C1)","FIORI (F1)"] },
       { subzona: "LINARES", lotes: ["QUEBRACHO 1 (Q1)","QUEBRACHO 3 (Q3)","QUEBRACHO 4 (Q4)","TIERRAS DEL OESTE 1","TIERRAS DEL OESTE 2","TIERRAS DEL OESTE 3","TIERRAS DEL OESTE 4","TIERRAS DEL OESTE 5","TIERRAS DEL OESTE 6","TIERRAS DEL OESTE 7","TIERRAS DEL OESTE 8","TIERRAS DEL OESTE 9","TIERRAS DEL OESTE 10","TIERRAS DEL OESTE 11","TIERRAS DEL OESTE 12","TIERRAS DEL OESTE 13","TIERRAS DEL OESTE 14","TIERRAS DEL OESTE 15","LA GRATITUD 1 (LG1)","LA GRATITUD 2","LA GRATITUD CAMPO NUEVO"] },
       { subzona: "VILLA MINETTI", lotes: ["LA JUANITA 1 (LJ1)","LA JUANITA 2 (LJ2)","LA JUANITA 3 (LJ3)"] },
       { subzona: "LOS CORDOBESES", lotes: [
@@ -250,7 +250,7 @@ const EMPRESAS = [
         "LOS CORDOBESES 1 (LC1)","LOS CORDOBESES 2 (LC2)","LOS CORDOBESES 3 (LC3)","LOS CORDOBESES 4 (LC4)","LOS CORDOBESES 5 (LC5)","LOS CORDOBESES 13 (LC13)","LOS CORDOBESES 15 (LC15)","LOS CORDOBESES 17 (LC17)",
         "ABRAHAM (A1)","VARGAS ETEL 1 (EV1)","VARGAS ETEL 3 (EV3)","ETEL VARGAS 2 (EV2)",
         "LEGUIZAMON (L1)","LA PIAMONTESA (LP1)","LA PIAMONTESA (LP2)",
-        "FIORI (F1)","GAUTO (G1)","DOMINGO LOPEZ (DL)","KAKUY (K1)","JUVENCIO",
+        "GAUTO (G1)","DOMINGO LOPEZ (DL)","KAKUY (K1)","JUVENCIO",
         "PERALTA","OLIVER GABRIEL"
       ] },
     ], lotes: [] },
@@ -1044,7 +1044,7 @@ function AppInner({ session, onLogout }) {
             options={EMPRESAS.map(e => e.empresa)}
             placeholder="Seleccionar empresa..."
           />
-          {data.empresa && (
+          {data.empresa && data.empresa !== "BERTOLI VARRONE" && (
             <CustomSelect
               label="Campo *"
               value={data.campo}
@@ -1053,6 +1053,7 @@ function AppInner({ session, onLogout }) {
               placeholder="Seleccionar campo..."
             />
           )}
+          {data.empresa === "BERTOLI VARRONE" && !data.campo && (() => { setTimeout(() => set("campo", "BERTOLI VARRONE"), 0); return null; })()}
           {data.campo && (() => {
             const campoData = EMPRESAS.find(e => e.empresa === data.empresa)?.campos.find(c => c.campo === data.campo);
             const hasSubzonas = campoData?.subzonas?.length > 0;
