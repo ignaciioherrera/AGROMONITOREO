@@ -479,10 +479,56 @@ const CheckGrid = ({ items, selected, onChange }) => (
 );
 
 
-const PlagaRow = ({ title, scientific, children, last }) => (
+const ESPECIES = {
+  isocas: [
+    { nombre: "Anticarsia gemmatalis", comun: "Oruga de la soja", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Anticarsia_gemmatalis_larva.jpg/320px-Anticarsia_gemmatalis_larva.jpg" },
+    { nombre: "Rachiplusia nu", comun: "Oruga medidora", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Rachiplusia_nu.jpg/320px-Rachiplusia_nu.jpg" },
+    { nombre: "Spodoptera frugiperda", comun: "Oruga cogollera", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Spodoptera_frugiperda_caterpillar.jpg/320px-Spodoptera_frugiperda_caterpillar.jpg" },
+    { nombre: "Helicoverpa gelotopoeon", comun: "Bolillera", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Helicoverpa_zea_larva.jpg/320px-Helicoverpa_zea_larva.jpg" },
+  ],
+  chinches: [
+    { nombre: "Nezara viridula", comun: "Chinche verde", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Nezara_viridula_-_Pentatoma_viridula_-_Stinkwanze_%28detail%29.jpg/320px-Nezara_viridula_-_Pentatoma_viridula_-_Stinkwanze_%28detail%29.jpg" },
+    { nombre: "Piezodorus guildinii", comun: "Chinche de la alfalfa", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Piezodorus_guildinii.jpg/320px-Piezodorus_guildinii.jpg" },
+    { nombre: "Dichelops furcatus", comun: "Chinche del tallo", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Dichelops_furcatus.jpg/320px-Dichelops_furcatus.jpg" },
+    { nombre: "Edessa meditabunda", comun: "Chinche de cuernitos", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Edessa_meditabunda.jpg/320px-Edessa_meditabunda.jpg" },
+  ],
+};
+
+function EspeciesRef({ plaga }) {
+  const [open, setOpen] = React.useState(false);
+  const lista = ESPECIES[plaga];
+  if (!lista) return null;
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{ background: "none", border: "none", color: C.accent, fontFamily: SANS, fontSize: 11, fontWeight: 600, cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 4 }}>
+        {open ? "▲" : "▼"} Ver especies principales
+      </button>
+      {open && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
+          {lista.map((e, i) => (
+            <div key={i} style={{ background: C.inputBg, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              <img src={e.foto} alt={e.nombre}
+                style={{ width: "100%", height: 80, objectFit: "cover", display: "block" }}
+                onError={ev => { ev.target.style.display = "none"; }}
+              />
+              <div style={{ padding: "6px 8px" }}>
+                <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: C.text }}>{e.comun}</div>
+                <div style={{ fontFamily: SANS, fontSize: 10, color: C.textFaint, fontStyle: "italic" }}>{e.nombre}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const PlagaRow = ({ title, scientific, children, last, especiesPlaga }) => (
   <div style={{ paddingBottom: 14, marginBottom: last ? 0 : 14, borderBottom: last ? "none" : `1px solid ${C.border}` }}>
     <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: C.text, marginBottom: scientific ? 2 : 8 }}>{title}</div>
     {scientific && <div style={{ fontFamily: SANS, fontSize: 11, color: C.textFaint, marginBottom: 8, fontStyle: "italic" }}>{scientific}</div>}
+    {especiesPlaga && <EspeciesRef plaga={especiesPlaga} />}
     {children}
   </div>
 );
@@ -1234,12 +1280,12 @@ function AppInner({ session, onLogout }) {
                   </div>
                 )}
                 {mostrar("isocas") && (
-                  <PlagaRow title="Isocas / Orugas">
+                  <PlagaRow title="Isocas / Orugas" especiesPlaga="isocas">
                     <div style={{ display: "flex", gap: 10 }}><NumInput label="Cantidad / metro" unit="/m" value={data.isocas} onChange={v => set("isocas", v)} /><NumInput label="% defoliación" unit="%" value={data.isocasDano} onChange={v => set("isocasDano", v)} /></div>
                   </PlagaRow>
                 )}
                 {mostrar("chinches") && (
-                  <PlagaRow title="Chinches">
+                  <PlagaRow title="Chinches" especiesPlaga="chinches">
                     <div style={{ display: "flex", gap: 10 }}><NumInput label="Adultos / metro" unit="/m" value={data.chinches} onChange={v => set("chinches", v)} /><NumInput label="Ninfas / metro" unit="/m" value={data.chinchesDano} onChange={v => set("chinchesDano", v)} /></div>
                   </PlagaRow>
                 )}
