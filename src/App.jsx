@@ -494,22 +494,30 @@ const ESPECIES = {
   ],
 };
 
-function EspeciesRef({ plaga, onCount }) {
+function EspeciesRef({ plaga, onCount, onDetalle }) {
   const lista = ESPECIES[plaga];
   const [counts, setCounts] = React.useState(lista ? lista.map(() => 0) : []);
   if (!lista) return null;
+  const notify = (next) => {
+    const total = next.reduce((a, b) => a + b, 0);
+    if (onCount) onCount(total);
+    if (onDetalle) {
+      const detalle = {};
+      lista.forEach((e, i) => { if (next[i] > 0) detalle[e.comun] = next[i]; });
+      onDetalle(detalle);
+    }
+  };
   const tap = (i) => {
     const next = [...counts];
     next[i] += 1;
     setCounts(next);
-    if (onCount) onCount(next.reduce((a, b) => a + b, 0));
+    notify(next);
   };
   const reset = (i) => {
     const next = [...counts];
     next[i] = 0;
     setCounts(next);
-    const newTotal = next.reduce((a, b) => a + b, 0);
-    if (onCount) onCount(newTotal);
+    notify(next);
   };
   const total = counts.reduce((a, b) => a + b, 0);
   return (
@@ -549,11 +557,11 @@ function EspeciesRef({ plaga, onCount }) {
   );
 }
 
-const PlagaRow = ({ title, scientific, children, last, especiesPlaga, onSetPlaga }) => (
+const PlagaRow = ({ title, scientific, children, last, especiesPlaga, onSetPlaga, onSetDetalle }) => (
   <div style={{ paddingBottom: 14, marginBottom: last ? 0 : 14, borderBottom: last ? "none" : `1px solid ${C.border}` }}>
     <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: C.text, marginBottom: scientific ? 2 : 8 }}>{title}</div>
     {scientific && <div style={{ fontFamily: SANS, fontSize: 11, color: C.textFaint, marginBottom: 8, fontStyle: "italic" }}>{scientific}</div>}
-    {especiesPlaga && onSetPlaga && <EspeciesRef plaga={especiesPlaga} onCount={onSetPlaga} />}
+    {especiesPlaga && onSetPlaga && <EspeciesRef plaga={especiesPlaga} onCount={onSetPlaga} onDetalle={onSetDetalle} />}
     {children}
   </div>
 );
@@ -681,7 +689,7 @@ function AppInner({ session, onLogout }) {
     plantasPorMetro: "", distanciaEntresurco: "", estadioFenologico: "",
     cobertura: "",
     vuelco: false,
-    isocas: "", isocasDano: "",
+    isocas: "", isocasDano: "", isocasDetalle: {}, chinchesDetalle: {},
     chinches: "", chinchesDano: "",
     pulgones: "", pulgonesDano: "",
     trips: "", tripsDano: "",
@@ -806,6 +814,8 @@ function AppInner({ session, onLogout }) {
         isocas: data.isocas ? parseFloat(data.isocas) : null,
         isocas_dano: data.isocasDano ? parseFloat(data.isocasDano) : null,
         chinches: data.chinches ? parseFloat(data.chinches) : null,
+        chinches_detalle: data.chinchesDetalle && Object.keys(data.chinchesDetalle).length > 0 ? data.chinchesDetalle : null,
+        isocas_detalle: data.isocasDetalle && Object.keys(data.isocasDetalle).length > 0 ? data.isocasDetalle : null,
         chinches_dano: data.chinchesDano ? parseFloat(data.chinchesDano) : null,
         pulgones: data.pulgones ? parseFloat(data.pulgones) : null,
         pulgones_dano: data.pulgonesDano ? parseFloat(data.pulgonesDano) : null,
@@ -1305,11 +1315,11 @@ function AppInner({ session, onLogout }) {
                   </div>
                 )}
                 {mostrar("isocas") && (
-                  <PlagaRow title="Isocas / Orugas" especiesPlaga="isocas" onSetPlaga={v => set("isocas", v)}>
+                  <PlagaRow title="Isocas / Orugas" especiesPlaga="isocas" onSetPlaga={v => set("isocas", v)} onSetDetalle={v => set("isocasDetalle", v)}>
                   </PlagaRow>
                 )}
                 {mostrar("chinches") && (
-                  <PlagaRow title="Chinches" especiesPlaga="chinches" onSetPlaga={v => set("chinches", v)}>
+                  <PlagaRow title="Chinches" especiesPlaga="chinches" onSetPlaga={v => set("chinches", v)} onSetDetalle={v => set("chinchesDetalle", v)}>
                   </PlagaRow>
                 )}
                 {mostrar("pulgones") && (
