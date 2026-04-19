@@ -227,49 +227,53 @@ const FONT = `'DM Mono', 'Courier New', monospace`;
 const SANS = `'DM Sans', 'Segoe UI', sans-serif`;
 
 const EMPRESAS = [
-  { empresa: "HERRERA IGNACIO", campos: [
-    { campo: "LASTRA", lotes: ["1","2","LASTRA ZULEMA"] },
+  { empresa: "IGNACIO HERRERA", campos: [
+    { campo: "LASTRA", lotes: ["LASTRA 1","LASTRA 2","ZULEMA LASTRA"] },
   ]},
   { empresa: "AGROCORSI", campos: [
-    { campo: "ANTONELLA", lotes: ["LOTE A1","LOTE A2"] },
-    { campo: "EL PAMPA", lotes: ["LOTE V1A","LOTE V1B","V2","V3","V4","V5","V6","V7","V8","V9","V10A","V10B","V11"] },
-    { campo: "INTIGUATANA", lotes: ["INTIGUATANA"] },
-    { campo: "LAS MARIAS", lotes: ["LAS MARIA"] },
-    { campo: "MARTINEZ", lotes: ["1"] },
-    { campo: "SAN PEDRO", lotes: ["1","2","3","4","5","6","7","8","9","10","11A","11B","11C","12"] },
-  ]},
-  { empresa: "BERTOLI VARRONE", campos: [
-    { campo: "BERTOLI VARRONE", subzonas: [
-      { subzona: "BANDERA", lotes: ["PANAMBI 1 (PA1)","PANAMBI 2 (PA2)","QUIMIL","CORDERO A","EL SIN QUERER","CARDOZO (C1)","FIORI (F1)"] },
-      { subzona: "LINARES", lotes: ["QUEBRACHO 1 (Q1)","QUEBRACHO 3 (Q3)","QUEBRACHO 4 (Q4)","TIERRAS DEL OESTE 1","TIERRAS DEL OESTE 2","TIERRAS DEL OESTE 3","TIERRAS DEL OESTE 4","TIERRAS DEL OESTE 5","TIERRAS DEL OESTE 6","TIERRAS DEL OESTE 7","TIERRAS DEL OESTE 8","TIERRAS DEL OESTE 9","TIERRAS DEL OESTE 10","TIERRAS DEL OESTE 11","TIERRAS DEL OESTE 12","TIERRAS DEL OESTE 13","TIERRAS DEL OESTE 14","TIERRAS DEL OESTE 15","LA GRATITUD 1 (LG1)","LA GRATITUD 2","LA GRATITUD CAMPO NUEVO"] },
-      { subzona: "VILLA MINETTI", lotes: ["LA JUANITA 1 (LJ1)","LA JUANITA 2 (LJ2)","LA JUANITA 3 (LJ3)"] },
-      { subzona: "LOS CORDOBESES", lotes: [
-        "URUNDAY 1 (U1)","URUNDAY 2 (U2)","URUNDAY 3 (U3)","URUNDAY 4 (U4)","URUNDAY 5 (U5)","URUNDAY 6 (U6)","URUNDAY 7 (U7)",
-        "SANTA MARIA 1 (SM1)","SANTA MARIA 2 (SM2)","SANTA MARIA 3 (SM3)","SANTA MARIA 4 (SM4)","SANTA MARIA 5 (SM5)",
-        "GOROSITO (GO)",
-        "LOS CORDOBESES 1 (LC1)","LOS CORDOBESES 2 (LC2)","LOS CORDOBESES 3 (LC3)","LOS CORDOBESES 4 (LC4)","LOS CORDOBESES 5 (LC5)","LOS CORDOBESES 13 (LC13)","LOS CORDOBESES 15 (LC15)",
-        "ABRAHAM (A1)","VARGAS ETEL 1 (EV1)","VARGAS ETEL 3 (EV3)","ETEL VARGAS 2 (EV2)",
-        "LEGUIZAMON (L1)","LA PIAMONTESA (LP1)","LA PIAMONTESA (LP2)",
-        "GAUTO (G1)","DOMINGO LOPEZ (DL)","KAKUY (K1)","JUVENCIO",
-        "PERALTA","OLIVER GABRIEL"
-      ] },
-    ], lotes: [] },
-  ]},
-  { empresa: "FERNANDO PIGHIN 2", campos: [
-    { campo: "EST. EL PROGRESO", lotes: ["LOTE 1","LOTE 3","LOTE 5","2A","2B","LOTE 4A","LOTE 4B","FERNANDO 5"] },
-    { campo: "EST. LA LUNA", lotes: ["FERNANDO 1","FERNANDO 2","FERNANDO 3","FERNANDO 4","FERNANDO 6","FERNANDO 7","FERNANDO 8","LOTE NUEVO"] },
-  ]},
-  { empresa: "GIANFRANCO BERTOLI", campos: [
-    { campo: "TIERRAS DEL OESTE", lotes: ["LOTE 1","LOTE 2"] },
+    { campo: "AGROCORSI", lotes: ["ANTONELLA","MARTINEZ"] },
+    { campo: "EL PAMPA", lotes: ["EL PAMPA LOTE V1A","EL PAMPA LOTE V1B","EL PAMPA LOTE V2","EL PAMPA LOTE V3","EL PAMPA LOTE V4","EL PAMPA LOTE V5","EL PAMPA LOTE V6","EL PAMPA LOTE V7","EL PAMPA LOTE V8","EL PAMPA LOTE V9","EL PAMPA LOTE V10A","EL PAMPA LOTE V10B","EL PAMPA LOTE V11"] },
+    { campo: "SAN PEDRO", lotes: ["SAN PEDRO LOTE 1","SAN PEDRO LOTE 2","SAN PEDRO LOTE 3","SAN PEDRO LOTE 4","SAN PEDRO LOTE 5","SAN PEDRO LOTE 6","SAN PEDRO LOTE 7","SAN PEDRO LOTE 8","SAN PEDRO LOTE 9","SAN PEDRO LOTE 10","SAN PEDRO LOTE 11A","SAN PEDRO LOTE 11B","SAN PEDRO LOTE 11C","SAN PEDRO LOTE 12"] },
+    { campo: "LAS MARIAS", lotes: ["LAS MARIAS"] },
   ]},
   { empresa: "GREGORET HNOS", campos: [
-    { campo: "GREGORET HNOS", lotes: ["LA CUÑA","EL SUIZO","FIORI","FIORI","ANTONIO FIORI","SAN PABLO","ESTANCIA GREGORET","LA PERSEVERANCIA","NORMA QUIROZ","CASTAÑO","LA PAMPITA","NORA ANAYA","ROMAN"] },
+    { campo: "BANDERA", lotes: ["SAN PABLO","LA PAMPITA","FIORI","FIORI 1","FIORI RICARDO","ANAYA","ROMAN","LA PERSEVERANCIA","EL SUIZO","LA CUÑA","ESTANCIA GREGORET","NORMA QUIROZ"] },
   ]},
-  { empresa: "SIGOTO/GOROSITO/BERTOLI", campos: [
-    { campo: "EL OCASO", lotes: ["1 ESTE","2 OESTE"] },
+  { empresa: "PIGHIN", campos: [
+    { campo: "LA LUNA", lotes: ["FERNANDO 1","FERNANDO 2","FERNANDO 3","FERNANDO 4","FERNANDO 5","FERNANDO 6","FERNANDO 7","FERNANDO 8"] },
+    { campo: "EL PROGRESO", lotes: ["EL PROGRESO LOTE 1","EL PROGRESO LOTE 2A","EL PROGRESO LOTE 2B","EL PROGRESO LOTE 3","EL PROGRESO 4A","EL PROGRESO LOTE 4B","EL PROGRESO LOTE 5"] },
   ]},
-  { empresa: "VACHETTA JORGE", campos: [
-    { campo: "DON ALBINO", lotes: ["LOTE 1","LOTE 2"] },
+  { empresa: "BERTOLI VARRONE", campos: [
+    { campo: "TIERRAS DEL OESTE", lotes: ["TIERRAS DEL OESTE 1","TIERRAS DEL OESTE 3-5","TIERRAS DEL OESTE 4-6","TIERRAS DEL OESTE 7","TIERRAS DEL OESTE 8-11-12","TIERRAS DEL OESTE 9","TIERRAS DEL OESTE 10","TIERRAS DEL OESTE 13","TIERRAS DEL OESTE 14","TIERRAS DEL OESTE 15","EL QUEBRACHO"] },
+    { campo: "LA GRATITUD", lotes: ["LA GRATITUD"] },
+    { campo: "LA PIAMONTESA", lotes: ["PIAMONTESA LP1","LA PIAMONTESA LP2"] },
+    { campo: "LA JUANITA", lotes: ["LA JUANITA LJ1","LA JUANITA LJ2","LA JUANITA LJ3"] },
+    { campo: "CARDOZO", lotes: ["BERTOLI CARDOZO"] },
+    { campo: "FIORI", lotes: ["BERTOLI FIORI"] },
+    { campo: "EL SIN QUERER", lotes: ["EL SIN QUERER"] },
+    { campo: "URUNDAY", lotes: ["URUNDAY 1","URUNDAY 2","URUNDAY 3","URUNDAY 4","URUNDAY 5","URUNDAY 6","URUNDAY 7"] },
+    { campo: "SANTA MARIA", lotes: ["SANTA MARIA 1","SANTA MARIA 2","SANTA MARIA 3","SANTA MARIA 4","SANTA MARIA 5"] },
+    { campo: "PERALTA", lotes: ["PERALTA"] },
+    { campo: "GOROSITO", lotes: ["GOROSITO"] },
+    { campo: "LOS CORDOBESES", lotes: ["LOS CORDOBESES 1","LOS CORDOBESES 2","LOS CORDOBESES 3","LOS CORDOBESES 4","LOS CORDOBESES 5","LOS CORDOBESES 13","LOS CORDOBESES 15"] },
+    { campo: "JUVENCIO", lotes: ["JUVENCIO"] },
+    { campo: "LEGUIZAMON", lotes: ["LEGUIZAMON"] },
+    { campo: "ETHEL VARGAS", lotes: ["ETEL VARGAS 1","ETEL VARGAS 2","ETHEL VARGAS 3"] },
+    { campo: "ABRAHAM", lotes: ["ABRAHAM"] },
+    { campo: "GAUTO", lotes: ["GAUTO"] },
+    { campo: "DOMINGO LOPEZ", lotes: ["DOMINGO LOPEZ"] },
+    { campo: "KAKUY", lotes: ["KAKUY"] },
+    { campo: "PANAMBI", lotes: ["PANAMBI PA1","PANAMBI PA2"] },
+    { campo: "LOS QUIMILES", lotes: ["CORDERO A","QUIMIL"] },
+  ]},
+  { empresa: "GOROSITO/SIGOTO/BERTOLI", campos: [
+    { campo: "EL OCASO", lotes: ["OCASO LOTE 1 ESTE","OCASO LOTE 2 OESTE"] },
+  ]},
+  { empresa: "GIANFRANCO BERTOLI", campos: [
+    { campo: "TIERRAS DEL OESTE PUPI", lotes: ["LINARES GIANFRANCO BERTOLI"] },
+  ]},
+  { empresa: "VACHETTA", campos: [
+    { campo: "DON ALBINO", lotes: ["VACHETTA LOTE 1","VACHETTA LOTE 2"] },
   ]},
 ];
 const CAMPOS = EMPRESAS.flatMap(e => e.campos.map(c => ({ ...c, empresa: e.empresa })));
@@ -1070,10 +1074,8 @@ function AppInner({ session, onLogout }) {
               placeholder="Seleccionar campo..."
             />
           )}
-          {data.empresa === "BERTOLI VARRONE" && !data.campo && (() => { setTimeout(() => set("campo", "BERTOLI VARRONE"), 0); return null; })()}
           {data.campo && (() => {
             const campoData = EMPRESAS.find(e => e.empresa === data.empresa)?.campos.find(c => c.campo === data.campo);
-            const hasSubzonas = campoData?.subzonas?.length > 0;
             const onLoteChange = v => {
               set("lote", v);
               setHistorial([]); setMostrarHistorial(false); if (v) fetchHistorial(v);
@@ -1086,26 +1088,6 @@ function AppInner({ session, onLogout }) {
                 );
               }
             };
-            if (hasSubzonas) return (
-              <>
-                <SearchSelect
-                  label="Zona *"
-                  value={subzona}
-                  onChange={v => { setSubzona(v); set("lote", ""); }}
-                  options={campoData.subzonas.map(s => s.subzona)}
-                  placeholder="Seleccionar zona..."
-                />
-                {subzona && (
-                  <SearchSelect
-                    label="Lote *"
-                    value={data.lote}
-                    onChange={onLoteChange}
-                    options={campoData.subzonas.find(s => s.subzona === subzona)?.lotes || []}
-                    placeholder="Buscar lote..."
-                  />
-                )}
-              </>
-            );
             return (
               <SearchSelect
                 label="Lote *"
