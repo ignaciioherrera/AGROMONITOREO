@@ -250,7 +250,7 @@ const EMPRESAS = [
     { campo: "LA JUANITA", lotes: ["LA JUANITA LJ1","LA JUANITA LJ2","LA JUANITA LJ3"] },
     { campo: "CARDOZO", lotes: ["BERTOLI CARDOZO"] },
     { campo: "FIORI", lotes: ["BERTOLI FIORI"] },
-    { campo: "EL SIN QUERER", lotes: ["EL SIN QUERER"] },
+    { campo: "EL SIN QUERER", lotes: ["EL SIN QUERER 1","EL SIN QUERER 2","EL SIN QUERER 3"] },
     { campo: "URUNDAY", lotes: ["URUNDAY 1","URUNDAY 2","URUNDAY 3","URUNDAY 4","URUNDAY 5","URUNDAY 6","URUNDAY 7"] },
     { campo: "SANTA MARIA", lotes: ["SANTA MARIA 1","SANTA MARIA 2","SANTA MARIA 3","SANTA MARIA 4","SANTA MARIA 5"] },
     { campo: "PERALTA", lotes: ["PERALTA"] },
