@@ -1065,7 +1065,7 @@ function AppInner({ session, onLogout }) {
             options={EMPRESAS.map(e => e.empresa)}
             placeholder="Seleccionar empresa..."
           />
-          {data.empresa && data.empresa !== "BERTOLI VARRONE" && (
+          {data.empresa && (
             <CustomSelect
               label="Campo *"
               value={data.campo}
