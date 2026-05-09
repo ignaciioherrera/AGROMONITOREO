@@ -162,7 +162,7 @@ function LoginScreen({ onLogin }) {
         </div>
 
         <div style={{ textAlign: "center", marginTop: 20, fontSize: 11, color: "#94b09a", fontFamily: "'DM Mono', monospace" }}>
-          AGRO·MONITOR · v1.2
+          AGRO MONITOREO · v1.2
         </div>
       </div>
     </div>
@@ -1013,18 +1013,18 @@ function AppInner({ session, onLogout }) {
         input::placeholder, textarea::placeholder { color: ${C.textFaint}; }
       `}</style>
 
-      <div style={{ background: C.accent, padding: "16px 18px 14px", position: "sticky", top: 0, zIndex: 100 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      <div style={{ background: "#f8faf8", padding: "10px 18px 10px", position: "sticky", top: 0, zIndex: 100, borderBottom: "2px solid #e0e8e0", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <div style={{ fontFamily: FONT, fontSize: 11, color: "rgba(255,255,255,0.7)", letterSpacing: 3, marginBottom: 4 }}>PLANILLA DE CAMPO</div>
-            <div style={{ fontFamily: FONT, fontSize: 18, color: "#fff", fontWeight: 700, letterSpacing: 1 }}>◈ MONITOREO</div>
+            <img src="/logo.svg" alt="Agro Monitoreo" style={{ height: 34, width: "auto" }} />
+            <div style={{ fontFamily: FONT, fontSize: 10, color: "#888", letterSpacing: 1, marginTop: 2 }}>PLANILLA DE CAMPO</div>
           </div>
           <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontFamily: FONT, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>{session?.user?.user_metadata?.nombre || session?.user?.email?.split("@")[0]}</span>
-              <button onClick={onLogout} style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "3px 10px", color: "rgba(255,255,255,0.8)", fontFamily: FONT, fontSize: 10, cursor: "pointer" }}>Salir</button>
+              <span style={{ fontFamily: FONT, fontSize: 11, color: "#555" }}>{session?.user?.user_metadata?.nombre || session?.user?.email?.split("@")[0]}</span>
+              <button onClick={onLogout} style={{ background: "rgba(0,0,0,0.07)", border: "1px solid #ccc", borderRadius: 20, padding: "3px 10px", color: "#555", fontFamily: FONT, fontSize: 10, cursor: "pointer" }}>Salir</button>
             </div>
-            <div style={{ fontFamily: FONT, fontSize: 12, color: "rgba(255,255,255,0.8)" }}>{data.fecha} · {data.hora}</div>
+            <div style={{ fontFamily: FONT, fontSize: 12, color: "#888" }}>{data.fecha} · {data.hora}</div>
             {pendingCount > 0 && (
               <div style={{ display: "flex", gap: 6 }}>
                 <button
