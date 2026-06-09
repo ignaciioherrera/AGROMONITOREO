@@ -4,13 +4,14 @@ import React, { useState, useRef, useEffect } from "react";
 const SUPABASE_URL = "https://izijmjntrpksmzuwvtle.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6aWptam50cnBrc216dXd2dGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MTQyNjAsImV4cCI6MjA4OTE5MDI2MH0.hsG0v5xmM81lCMU1VvwHETFp8C9Al4OPxoSyuyfY_ks";
 
-const supabaseInsert = async (payload) => {
+const supabaseInsert = async (payload, tok) => {
+  const authTok = tok || SUPABASE_KEY;
   const res = await fetch(`${SUPABASE_URL}/rest/v1/monitoreos`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "apikey": SUPABASE_KEY,
-      "Authorization": `Bearer ${SUPABASE_KEY}`,
+      "Authorization": `Bearer ${authTok}`,
       "Prefer": "return=minimal"
     },
     body: JSON.stringify(payload)
@@ -888,12 +889,13 @@ function AppInner({ session, onLogout }) {
       };
       try {
         // Insert y obtener ID para subir fotos
+        const authTok = session?.access_token || SUPABASE_KEY;
         const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/monitoreos`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "apikey": SUPABASE_KEY,
-            "Authorization": `Bearer ${SUPABASE_KEY}`,
+            "Authorization": `Bearer ${authTok}`,
             "Prefer": "return=representation"
           },
           body: JSON.stringify(payload)
@@ -912,7 +914,7 @@ function AppInner({ session, onLogout }) {
               headers: {
                 "Content-Type": "application/json",
                 "apikey": SUPABASE_KEY,
-                "Authorization": `Bearer ${SUPABASE_KEY}`,
+                "Authorization": `Bearer ${authTok}`,
                 "Prefer": "return=minimal"
               },
               body: JSON.stringify({ fotos_urls: urls })
