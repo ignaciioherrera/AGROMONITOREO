@@ -1506,4 +1506,50 @@ function AppInner({ session, onLogout }) {
                   <button onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}
                     style={{ position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: "50%", background: "rgba(0,0,0,0.6)", border: "none", color: "#fff", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
                   {/* GPS badge */}
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "r
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.55)", padding: "3px 5px" }}>
+                    {p.gps ? (
+                      <div style={{ fontSize: 9, color: "#4ae87a", fontFamily: "monospace", lineHeight: 1.3 }}>
+                        📍 {p.gps.lat}, {p.gps.lng}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", fontFamily: "monospace" }}>sin GPS</div>
+                    )}
+                    {p.hora && <div style={{ fontSize: 9, color: "rgba(255,255,255,0.6)", fontFamily: "monospace" }}>{p.hora}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </SECTION>
+
+        <SECTION title="OBSERVACIONES Y RECOMENDACIONES" icon="📝">
+          <div style={{ marginBottom: 12 }}><TextArea label="Observaciones generales" value={data.observaciones} onChange={v => set("observaciones", v)} placeholder="Todo lo que consideres importante para el administrador..." /></div>
+          <TextArea label="Recomendaciones de manejo" value={data.recomendaciones} onChange={v => set("recomendaciones", v)} placeholder="Ej: Aplicar fungicida, repetir monitoreo en 7 días..." />
+        </SECTION>
+
+      </div>
+
+      <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: C.surface, borderTop: `1px solid ${C.border}`, padding: "14px 16px 24px", zIndex: 200 }}>
+        {!canSubmit && <div style={{ fontFamily: SANS, fontSize: 12, color: C.warn, textAlign: "center", marginBottom: 10 }}>⚠ Completá Empresa, Campo, Lote y Cultivo para enviar</div>}
+        <button onClick={handleSubmit} disabled={!canSubmit}
+          style={{ width: "100%", border: "none", borderRadius: 14, padding: "16px", fontFamily: FONT, fontSize: 14, fontWeight: 700, letterSpacing: 2, cursor: canSubmit ? "pointer" : "not-allowed", background: canSubmit ? C.accent : C.border, color: canSubmit ? "#fff" : C.textFaint, transition: "all 0.2s" }}>
+          {`ENVIAR MONITOREO${photos.length > 0 ? ` · ${photos.length} FOTO${photos.length > 1 ? "S" : ""}` : ""}`}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [session, setSession] = useState(() => getStoredSession());
+
+  const handleLogin = (s) => setSession(s);
+  const handleLogout = async () => {
+    if (session?.access_token) await authSignOut(session.access_token).catch(() => {});
+    clearSession();
+    setSession(null);
+  };
+
+  if (!session) return <ErrorBoundary><LoginScreen onLogin={handleLogin} /></ErrorBoundary>;
+  return <ErrorBoundary><AppInner session={session} onLogout={handleLogout} /></ErrorBoundary>;
+}
