@@ -575,6 +575,35 @@ function EspeciesRef({ plaga, onCount, onDetalle }) {
   );
 }
 
+// ── CONTADOR GRANDE +/− para campo ───────────────────────────
+const PlagaCounter = ({ value, onChange, label, unit, step = 1 }) => {
+  const num = parseFloat(value) || 0;
+  const btnBase = {
+    width: 64, height: 64, border: "none", fontSize: 32, fontWeight: 700,
+    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+    userSelect: "none", WebkitUserSelect: "none", touchAction: "manipulation", flexShrink: 0,
+  };
+  return (
+    <div style={{ marginBottom: 12 }}>
+      {label && <Label>{label}</Label>}
+      <div style={{ display: "flex", alignItems: "center", borderRadius: 14, overflow: "hidden", border: `2px solid ${num > 0 ? C.accent : C.border}`, background: C.inputBg }}>
+        <button
+          onClick={() => onChange(String(Math.max(0, parseFloat((num - step).toFixed(1)))))}
+          style={{ ...btnBase, background: num > 0 ? C.accentLight : "#f0f4f0", color: num > 0 ? C.accent : C.textFaint }}
+        >−</button>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: num > 0 ? C.accentLight : "transparent", minHeight: 64 }}>
+          <span style={{ fontFamily: FONT, fontSize: 34, fontWeight: 700, color: num > 0 ? C.accentDark : C.textFaint, lineHeight: 1 }}>{num}</span>
+          {unit && <span style={{ fontSize: 10, color: C.textFaint, marginTop: 2 }}>{unit}</span>}
+        </div>
+        <button
+          onClick={() => onChange(String(parseFloat((num + step).toFixed(1))))}
+          style={{ ...btnBase, background: C.accent, color: "#fff" }}
+        >+</button>
+      </div>
+    </div>
+  );
+};
+
 const NIVELES = ["BAJA", "MEDIA", "ALTA"];
 const NivelSelect = ({ value, onChange }) => (
   <div style={{ display: "flex", gap: 8 }}>
@@ -714,6 +743,20 @@ function AppInner({ session, onLogout }) {
     trySync();
     window.addEventListener("online", trySync);
     return () => window.removeEventListener("online", trySync);
+  }, []);
+
+  // ── WAKE LOCK: pantalla no se apaga durante el monitoreo ──────
+  useEffect(() => {
+    let wakeLock = null;
+    const acquire = async () => {
+      try {
+        if (navigator.wakeLock) wakeLock = await navigator.wakeLock.request("screen");
+      } catch { /* dispositivo no soporta o denegado */ }
+    };
+    acquire();
+    const onVisible = () => { if (document.visibilityState === "visible") acquire(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { wakeLock?.release(); document.removeEventListener("visibilitychange", onVisible); };
   }, []);
 
   const [subzona, setSubzona] = useState("");
@@ -1026,7 +1069,14 @@ function AppInner({ session, onLogout }) {
               <span style={{ fontFamily: FONT, fontSize: 11, color: "#555" }}>{session?.user?.user_metadata?.nombre || session?.user?.email?.split("@")[0]}</span>
               <button onClick={onLogout} style={{ background: "rgba(0,0,0,0.07)", border: "1px solid #ccc", borderRadius: 20, padding: "3px 10px", color: "#555", fontFamily: FONT, fontSize: 10, cursor: "pointer" }}>Salir</button>
             </div>
-            <div style={{ fontFamily: FONT, fontSize: 12, color: "#888" }}>{data.fecha} · {data.hora}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ fontFamily: FONT, fontSize: 12, color: "#888" }}>{data.fecha} · {data.hora}</div>
+              {data.empresa && data.campo && estacionActual > 1 && (
+                <div style={{ background: C.accent, color: "#fff", fontFamily: FONT, fontSize: 11, fontWeight: 700, borderRadius: 10, padding: "2px 8px" }}>
+                  {estacionActual - 1} parada{estacionActual - 1 !== 1 ? "s" : ""}
+                </div>
+              )}
+            </div>
             {pendingCount > 0 && (
               <div style={{ display: "flex", gap: 6 }}>
                 <button
@@ -1398,19 +1448,19 @@ function AppInner({ session, onLogout }) {
                 )}
                 {mostrar("chicharrita") && (
                   <PlagaRow title="Chicharrita del maíz" scientific="Dalbulus maidis">
-                    <div style={{ display: "flex", gap: 10 }}><NumInput label="Adultos / planta" unit="/pl" value={data.chicharrita} onChange={v => set("chicharrita", v)} /><NumInput label="% plantas afect." unit="%" value={data.chicharritaDano} onChange={v => set("chicharritaDano", v)} /></div>
+                    <PlagaCounter label="Adultos / planta" unit="/pl" value={data.chicharrita} onChange={v => set("chicharrita", v)} step={0.5} />
+                    <NumInput label="% plantas afectadas" unit="%" value={data.chicharritaDano} onChange={v => set("chicharritaDano", v)} />
                   </PlagaRow>
                 )}
                 {mostrar("cogollero") && (
                   <PlagaRow title="Cogollero">
-                    <div style={{ display: "flex", gap: 10 }}><NumInput label="Larvas / planta" unit="/pl" value={data.cogollero} onChange={v => set("cogollero", v)} /><NumInput label="% plantas afect." unit="%" value={data.cogolleroDano} onChange={v => set("cogolleroDano", v)} /></div>
+                    <PlagaCounter label="Larvas / planta" unit="/pl" value={data.cogollero} onChange={v => set("cogollero", v)} step={0.5} />
+                    <NumInput label="% plantas afectadas" unit="%" value={data.cogolleroDano} onChange={v => set("cogolleroDano", v)} />
                   </PlagaRow>
                 )}
                 <PlagaRow title="Otra plaga" last>
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <div style={{ flex: 2 }}><Label>Nombre</Label><input type="text" placeholder="Describir..." value={data.otraPlaga} onChange={e => set("otraPlaga", e.target.value)} style={inputBase} /></div>
-                    <NumInput label="Cantidad" value={data.otraPlagaCantidad} onChange={v => set("otraPlagaCantidad", v)} />
-                  </div>
+                  <div style={{ marginBottom: 10 }}><Label>Nombre</Label><input type="text" placeholder="Describir..." value={data.otraPlaga} onChange={e => set("otraPlaga", e.target.value)} style={inputBase} /></div>
+                  {data.otraPlaga && <PlagaCounter label="Cantidad" value={data.otraPlagaCantidad} onChange={v => set("otraPlagaCantidad", v)} />}
                 </PlagaRow>
               </SECTION>
 
@@ -1456,50 +1506,4 @@ function AppInner({ session, onLogout }) {
                   <button onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}
                     style={{ position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: "50%", background: "rgba(0,0,0,0.6)", border: "none", color: "#fff", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
                   {/* GPS badge */}
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.55)", padding: "3px 5px" }}>
-                    {p.gps ? (
-                      <div style={{ fontSize: 9, color: "#4ae87a", fontFamily: "monospace", lineHeight: 1.3 }}>
-                        📍 {p.gps.lat}, {p.gps.lng}
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", fontFamily: "monospace" }}>sin GPS</div>
-                    )}
-                    {p.hora && <div style={{ fontSize: 9, color: "rgba(255,255,255,0.6)", fontFamily: "monospace" }}>{p.hora}</div>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </SECTION>
-
-        <SECTION title="OBSERVACIONES Y RECOMENDACIONES" icon="📝">
-          <div style={{ marginBottom: 12 }}><TextArea label="Observaciones generales" value={data.observaciones} onChange={v => set("observaciones", v)} placeholder="Todo lo que consideres importante para el administrador..." /></div>
-          <TextArea label="Recomendaciones de manejo" value={data.recomendaciones} onChange={v => set("recomendaciones", v)} placeholder="Ej: Aplicar fungicida, repetir monitoreo en 7 días..." />
-        </SECTION>
-
-      </div>
-
-      <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: C.surface, borderTop: `1px solid ${C.border}`, padding: "14px 16px 24px", zIndex: 200 }}>
-        {!canSubmit && <div style={{ fontFamily: SANS, fontSize: 12, color: C.warn, textAlign: "center", marginBottom: 10 }}>⚠ Completá Empresa, Campo, Lote y Cultivo para enviar</div>}
-        <button onClick={handleSubmit} disabled={!canSubmit}
-          style={{ width: "100%", border: "none", borderRadius: 14, padding: "16px", fontFamily: FONT, fontSize: 14, fontWeight: 700, letterSpacing: 2, cursor: canSubmit ? "pointer" : "not-allowed", background: canSubmit ? C.accent : C.border, color: canSubmit ? "#fff" : C.textFaint, transition: "all 0.2s" }}>
-          {`ENVIAR MONITOREO${photos.length > 0 ? ` · ${photos.length} FOTO${photos.length > 1 ? "S" : ""}` : ""}`}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-export default function App() {
-  const [session, setSession] = useState(() => getStoredSession());
-
-  const handleLogin = (s) => setSession(s);
-  const handleLogout = async () => {
-    if (session?.access_token) await authSignOut(session.access_token).catch(() => {});
-    clearSession();
-    setSession(null);
-  };
-
-  if (!session) return <ErrorBoundary><LoginScreen onLogin={handleLogin} /></ErrorBoundary>;
-  return <ErrorBoundary><AppInner session={session} onLogout={handleLogout} /></ErrorBoundary>;
-}
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "r
