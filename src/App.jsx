@@ -537,6 +537,12 @@ function EspeciesRef({ plaga, onCount, onDetalle }) {
     setCounts(next);
     notify(next);
   };
+  const dec = (i) => {
+    const next = [...counts];
+    next[i] = Math.max(0, next[i] - 1);
+    setCounts(next);
+    notify(next);
+  };
   const reset = (i) => {
     const next = [...counts];
     next[i] = 0;
@@ -564,9 +570,11 @@ function EspeciesRef({ plaga, onCount, onDetalle }) {
             <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, color: C.text, lineHeight: 1.2 }}>{e.comun}</div>
             <div style={{ fontFamily: SANS, fontSize: 10, color: C.textFaint, fontStyle: "italic", lineHeight: 1.3, marginTop: 2 }}>{e.nombre}</div>
             {counts[i] > 0 && (
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
-                <span style={{ fontFamily: FONT, fontSize: 15, fontWeight: 700, color: C.accent }}>{counts[i]}</span>
-                <button onClick={e => { e.stopPropagation(); reset(i); }}
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
+                <button onClick={ev => { ev.stopPropagation(); dec(i); }}
+                  style={{ background: C.accent, border: "none", borderRadius: 6, width: 22, height: 22, color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, touchAction: "manipulation" }}>−</button>
+                <span style={{ fontFamily: FONT, fontSize: 15, fontWeight: 700, color: C.accent, minWidth: 18, textAlign: "center" }}>{counts[i]}</span>
+                <button onClick={ev => { ev.stopPropagation(); reset(i); }}
                   style={{ background: "none", border: "none", color: C.textFaint, fontSize: 11, cursor: "pointer", padding: 0, lineHeight: 1 }}>✕</button>
               </div>
             )}
