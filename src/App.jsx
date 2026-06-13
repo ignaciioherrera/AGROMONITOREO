@@ -1410,6 +1410,19 @@ function AppInner({ session, onLogout }) {
                     <span>Plagas relevantes para <b>{data.cultivo}</b> · {relevantes.length} de 7</span>
                   </div>
                 )}
+                {/* ── Contadores numéricos: van primero ── */}
+                {mostrar("cogollero") && (
+                  <PlagaRow title="Cogollero">
+                    <PlagaCounter label="Larvas / planta" unit="/pl" value={data.cogollero} onChange={v => set("cogollero", v)} step={0.5} />
+                    <NumInput label="% plantas afectadas" unit="%" value={data.cogolleroDano} onChange={v => set("cogolleroDano", v)} />
+                  </PlagaRow>
+                )}
+                {mostrar("chicharrita") && (
+                  <PlagaRow title="Chicharrita del maíz" scientific="Dalbulus maidis">
+                    <PlagaCounter label="Adultos / planta" unit="/pl" value={data.chicharrita} onChange={v => set("chicharrita", v)} step={0.5} />
+                    <NumInput label="% plantas afectadas" unit="%" value={data.chicharritaDano} onChange={v => set("chicharritaDano", v)} />
+                  </PlagaRow>
+                )}
                 {mostrar("isocas") && (
                   <PlagaRow title="Isocas / Orugas">
                     <PlagaCounter label="Total / paño" unit="/paño" value={data.isocas} onChange={v => set("isocas", v)} />
@@ -1420,6 +1433,7 @@ function AppInner({ session, onLogout }) {
                   <PlagaRow title="Chinches" especiesPlaga="chinches" onSetPlaga={v => set("chinches", v)} onSetDetalle={v => set("chinchesDetalle", v)}>
                   </PlagaRow>
                 )}
+                {/* ── Nivel BAJA/MEDIA/ALTA ── */}
                 {mostrar("pulgones") && (
                   <PlagaRow title="Pulgones">
                     <NivelSelect value={data.pulgones} onChange={v => set("pulgones", v)} />
@@ -1452,18 +1466,6 @@ function AppInner({ session, onLogout }) {
                 {mostrar("caracol") && (
                   <PlagaRow title="Caracol / Babosa">
                     <NivelSelect value={data.caracol} onChange={v => set("caracol", v)} />
-                  </PlagaRow>
-                )}
-                {mostrar("chicharrita") && (
-                  <PlagaRow title="Chicharrita del maíz" scientific="Dalbulus maidis">
-                    <PlagaCounter label="Adultos / planta" unit="/pl" value={data.chicharrita} onChange={v => set("chicharrita", v)} step={0.5} />
-                    <NumInput label="% plantas afectadas" unit="%" value={data.chicharritaDano} onChange={v => set("chicharritaDano", v)} />
-                  </PlagaRow>
-                )}
-                {mostrar("cogollero") && (
-                  <PlagaRow title="Cogollero">
-                    <PlagaCounter label="Larvas / planta" unit="/pl" value={data.cogollero} onChange={v => set("cogollero", v)} step={0.5} />
-                    <NumInput label="% plantas afectadas" unit="%" value={data.cogolleroDano} onChange={v => set("cogolleroDano", v)} />
                   </PlagaRow>
                 )}
                 <PlagaRow title="Otra plaga" last>
