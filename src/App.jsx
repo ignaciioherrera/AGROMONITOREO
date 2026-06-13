@@ -841,7 +841,7 @@ function AppInner({ session, onLogout }) {
       );
       const d = await r.json();
       setHistorial(Array.isArray(d) ? d : []);
-      if (Array.isArray(d) && d.length > 0) setMostrarHistorial(true);
+      // No abrir automáticamente — el usuario lo abre manualmente
     } catch { setHistorial([]); }
     setHistorialLoading(false);
   };
