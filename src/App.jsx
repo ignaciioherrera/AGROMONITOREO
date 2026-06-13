@@ -170,22 +170,64 @@ function LoginScreen({ onLogin }) {
   );
 }
 
-// ── OFFLINE QUEUE ─────────────────────────────
+// ── OFFLINE QUEUE (localStorage para datos) ───────────────────
 const QUEUE_KEY = "agro_monitor_queue";
 
 const getQueue = () => {
   try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || "[]"); }
   catch { return []; }
 };
-
 const saveQueue = (q) => localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
-
 const addToQueue = (payload) => {
   const q = getQueue();
   q.push({ ...payload, _queued_at: new Date().toISOString(), _id: Date.now() });
   saveQueue(q);
 };
 
+// ── INDEXEDDB PARA FOTOS OFFLINE ──────────────────────────────
+// localStorage no puede guardar imágenes — IndexedDB sí
+const openPhotoDB = () => new Promise((resolve, reject) => {
+  const req = indexedDB.open("agro_fotos_offline", 1);
+  req.onupgradeneeded = e => e.target.result.createObjectStore("fotos", { keyPath: "tempId" });
+  req.onsuccess = e => resolve(e.target.result);
+  req.onerror = () => reject(req.error);
+});
+
+const idbSaveFotos = async (tempId, fotos) => {
+  try {
+    const db = await openPhotoDB();
+    await new Promise((res, rej) => {
+      const tx = db.transaction("fotos", "readwrite");
+      tx.objectStore("fotos").put({ tempId, fotos });
+      tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+    });
+  } catch(e) { console.warn("idbSaveFotos:", e); }
+};
+
+const idbGetFotos = async (tempId) => {
+  try {
+    const db = await openPhotoDB();
+    return await new Promise((res, rej) => {
+      const tx = db.transaction("fotos", "readonly");
+      const req = tx.objectStore("fotos").get(tempId);
+      req.onsuccess = () => res(req.result?.fotos || []);
+      req.onerror = () => rej(req.error);
+    });
+  } catch { return []; }
+};
+
+const idbDeleteFotos = async (tempId) => {
+  try {
+    const db = await openPhotoDB();
+    await new Promise((res, rej) => {
+      const tx = db.transaction("fotos", "readwrite");
+      tx.objectStore("fotos").delete(tempId);
+      tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+    });
+  } catch(e) { console.warn("idbDeleteFotos:", e); }
+};
+
+// ── SYNC QUEUE con soporte de fotos offline ───────────────────
 const syncQueue = async () => {
   const q = getQueue();
   if (q.length === 0) return 0;
@@ -193,14 +235,46 @@ const syncQueue = async () => {
   const sent = [];
   for (const item of pending) {
     try {
-      const { _queued_at, _id, ...payload } = item;
-      await supabaseInsert(payload);
+      const { _queued_at, _id, _tempId, ...payload } = item;
+      // Insertar y obtener ID para poder subir fotos
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/monitoreos`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${SUPABASE_KEY}`,
+          "Prefer": "return=representation"
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const [insertado] = await res.json();
+      const monitoreoId = insertado?.id;
+
+      // Subir fotos guardadas offline si las hay
+      if (_tempId && monitoreoId) {
+        const fotosOffline = await idbGetFotos(_tempId);
+        if (fotosOffline.length > 0) {
+          const urls = await subirTodasLasFotos(fotosOffline, monitoreoId);
+          if (urls.length > 0) {
+            await fetch(`${SUPABASE_URL}/rest/v1/monitoreos?id=eq.${monitoreoId}`, {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                "apikey": SUPABASE_KEY,
+                "Authorization": `Bearer ${SUPABASE_KEY}`,
+                "Prefer": "return=minimal"
+              },
+              body: JSON.stringify({ fotos_urls: urls, fotos_count: urls.length })
+            });
+          }
+          await idbDeleteFotos(_tempId);
+        }
+      }
       sent.push(_id);
     } catch { break; }
   }
-  if (sent.length > 0) {
-    saveQueue(q.filter(i => !sent.includes(i._id)));
-  }
+  if (sent.length > 0) saveQueue(q.filter(i => !sent.includes(i._id)));
   return sent.length;
 };
 
@@ -982,7 +1056,10 @@ function AppInner({ session, onLogout }) {
         await syncQueue();
         setPendingCount(getQueue().length);
       } catch {
-        addToQueue(payload);
+        // Sin conexión: guardar datos en localStorage y fotos en IndexedDB
+        const tempId = Date.now();
+        addToQueue({ ...payload, _tempId: tempId });
+        if (photos.length > 0) await idbSaveFotos(tempId, photos);
         setPendingCount(getQueue().length);
       }
       // Incrementar estacion para la próxima parada del mismo campo
