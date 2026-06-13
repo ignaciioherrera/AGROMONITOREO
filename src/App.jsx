@@ -1405,7 +1405,9 @@ function AppInner({ session, onLogout }) {
                   </div>
                 )}
                 {mostrar("isocas") && (
-                  <PlagaRow title="Isocas / Orugas" especiesPlaga="isocas" onSetPlaga={v => set("isocas", v)} onSetDetalle={v => set("isocasDetalle", v)}>
+                  <PlagaRow title="Isocas / Orugas">
+                    <PlagaCounter label="Total / paño" unit="/paño" value={data.isocas} onChange={v => set("isocas", v)} />
+                    <EspeciesRef plaga="isocas" onCount={v => set("isocas", v)} onDetalle={v => set("isocasDetalle", v)} />
                   </PlagaRow>
                 )}
                 {mostrar("chinches") && (
