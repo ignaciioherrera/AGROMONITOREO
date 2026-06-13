@@ -288,28 +288,34 @@ const MALEZAS = ["Sorgo de alepo", "Gramón", "Ciperácea", "Verdolaga", "Yuyo c
 const PLANTILLAS_CULTIVO = {
   "Maíz": {
     estadios: ["V1","V2","V3","V4","V5","V6","V7","V8","V9","V10","V12","VT","R1","R2","R3","R4","R5","R6"],
-    plagasRelevantes: ["cogollero","chicharrita","chinches","aranhuelas"],
-    enfermedadesRelevantes: ["Roya","Tizón","Carbón","Fusarium","Otra"],
+    // Cogollero: principal isoca del maíz. Chicharrita: crítica (espiroplasma). Trips en V1-V4. Arañuelas en sequía.
+    plagasRelevantes: ["cogollero","chicharrita","trips","aranhuelas"],
+    enfermedadesRelevantes: ["Tizón","Carbón","Fusarium","Roya","Otra"],
   },
   "Soja": {
     estadios: ["V1","V2","V3","V4","V5","V6","R1","R2","R3","R4","R5","R6","R7","R8"],
-    plagasRelevantes: ["isocas","chinches","pulgones","trips","aranhuelas","caracol"],
-    enfermedadesRelevantes: ["Roya","Septoria","Cercospora Kukichi","Muerte súbita","Otra"],
+    // Isocas (Anticarsia, Rachiplusia, Spodoptera) y chinches (Nezara, Piezodorus, Edessa): críticas.
+    // Trips (Caliothrips), arañuelas (Tetranychus), caracol en zonas húmedas.
+    plagasRelevantes: ["isocas","chinches","trips","aranhuelas","caracol","pulgones"],
+    enfermedadesRelevantes: ["Roya","Mancha marrón","Tizón","Esclerotinia","Fusarium","Otra"],
   },
   "Trigo": {
     estadios: ["Macollaje","Encañazón","Espigazón","Antesis","Grano lechoso","Grano pastoso","Madurez"],
-    plagasRelevantes: ["pulgones","trips","aranhuelas"],
-    enfermedadesRelevantes: ["Roya","Tizón","Fusarium","Otra"],
+    // Pulgones: críticos (Schizaphis, Sitobion, Rhopalosiphum). Isocas (Agrotis, Pseudaletia). Trips.
+    plagasRelevantes: ["pulgones","isocas","trips","aranhuelas"],
+    enfermedadesRelevantes: ["Roya","Tizón","Fusarium","Mancha amarilla","Otra"],
   },
   "Girasol": {
     estadios: ["V2","V4","V6","V8","R1","R3","R5","R7","R9"],
-    plagasRelevantes: ["isocas","chinches","aranhuelas"],
-    enfermedadesRelevantes: ["Roya","Otra"],
+    // Isocas críticas (Helicoverpa zea en capitulo). Trips en V1-V4. Arañuelas en sequía.
+    plagasRelevantes: ["isocas","trips","aranhuelas","chinches"],
+    enfermedadesRelevantes: ["Esclerotinia","Roya","Podredumbre","Otra"],
   },
   "Sorgo": {
     estadios: ["V3","V6","V9","Panojamiento","Floración","Grano lechoso","Madurez"],
-    plagasRelevantes: ["cogollero","pulgones"],
-    enfermedadesRelevantes: [],
+    // Cogollero: crítico. Pulgones (Schizaphis, Rhopalosiphum): críticos. Chicharrita. Trips en inicio.
+    plagasRelevantes: ["cogollero","pulgones","chicharrita","isocas","trips"],
+    enfermedadesRelevantes: ["Carbón","Fusarium","Otra"],
   },
 };
 
