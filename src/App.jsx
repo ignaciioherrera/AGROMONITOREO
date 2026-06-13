@@ -163,7 +163,7 @@ function LoginScreen({ onLogin }) {
         </div>
 
         <div style={{ textAlign: "center", marginTop: 20, fontSize: 11, color: "#94b09a", fontFamily: "'DM Mono', monospace" }}>
-          AGRO MONITOREO · v1.2
+          Agro Monitoreo · v1.2
         </div>
       </div>
     </div>
