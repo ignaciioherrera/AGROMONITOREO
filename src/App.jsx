@@ -231,6 +231,9 @@ const idbDeleteFotos = async (tempId) => {
 const syncQueue = async () => {
   const q = getQueue();
   if (q.length === 0) return 0;
+  // Usar el token guardado para autenticar (igual que el submit directo)
+  const storedSession = getStoredSession();
+  const authTok = storedSession?.access_token || SUPABASE_KEY;
   const pending = [...q];
   const sent = [];
   for (const item of pending) {
@@ -242,7 +245,7 @@ const syncQueue = async () => {
         headers: {
           "Content-Type": "application/json",
           "apikey": SUPABASE_KEY,
-          "Authorization": `Bearer ${SUPABASE_KEY}`,
+          "Authorization": `Bearer ${authTok}`,
           "Prefer": "return=representation"
         },
         body: JSON.stringify(payload)
@@ -262,7 +265,7 @@ const syncQueue = async () => {
               headers: {
                 "Content-Type": "application/json",
                 "apikey": SUPABASE_KEY,
-                "Authorization": `Bearer ${SUPABASE_KEY}`,
+                "Authorization": `Bearer ${authTok}`,
                 "Prefer": "return=minimal"
               },
               body: JSON.stringify({ fotos_urls: urls, fotos_count: urls.length })
