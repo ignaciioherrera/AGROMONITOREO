@@ -99,6 +99,42 @@ const authSignOut = async (token) => {
   });
 };
 
+// Renueva el access_token usando el refresh_token (los refresh tokens duran semanas)
+const authRefreshSession = async (refreshToken) => {
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY },
+    body: JSON.stringify({ refresh_token: refreshToken })
+  });
+  if (!r.ok) throw new Error("No se pudo renovar la sesión");
+  return r.json();
+};
+
+// Renueva y guarda la sesión si el token está por vencer (< 5 min restantes)
+// Devuelve el token válido (renovado o el mismo si sigue vigente)
+const refreshSessionIfNeeded = async () => {
+  const stored = getStoredSession();
+  if (!stored?.refresh_token) return stored?.access_token || SUPABASE_KEY;
+  // El JWT tiene exp en base64 — lo decodificamos para saber si está vencido
+  try {
+    const payload = JSON.parse(atob(stored.access_token.split(".")[1]));
+    const expiresAt = payload.exp * 1000; // ms
+    const fiveMin = 5 * 60 * 1000;
+    if (Date.now() < expiresAt - fiveMin) {
+      return stored.access_token; // todavía tiene más de 5 min de vida
+    }
+  } catch { /* si no se puede decodificar, refrescamos igual */ }
+  // Token vencido o por vencer → renovar
+  try {
+    const newSession = await authRefreshSession(stored.refresh_token);
+    storeSession({ ...stored, ...newSession });
+    return newSession.access_token;
+  } catch {
+    // Sin señal o refresh_token vencido → usar el token que hay (irá a la cola offline)
+    return stored.access_token || SUPABASE_KEY;
+  }
+};
+
 const getStoredSession = () => {
   try { return JSON.parse(localStorage.getItem("agro_monitor_session") || "null"); } catch { return null; }
 };
@@ -231,9 +267,8 @@ const idbDeleteFotos = async (tempId) => {
 const syncQueue = async () => {
   const q = getQueue();
   if (q.length === 0) return 0;
-  // Usar el token guardado para autenticar (igual que el submit directo)
-  const storedSession = getStoredSession();
-  const authTok = storedSession?.access_token || SUPABASE_KEY;
+  // Renovar el token si está por vencer antes de intentar sincronizar
+  const authTok = await refreshSessionIfNeeded();
   const pending = [...q];
   const sent = [];
   for (const item of pending) {
@@ -827,6 +862,8 @@ function AppInner({ session, onLogout }) {
     setPendingCount(getQueue().length);
     const trySync = async () => {
       setSyncing(true);
+      // Renovar token primero (si el monitoreador vuelve del campo con token vencido)
+      if (navigator.onLine) await refreshSessionIfNeeded().catch(() => {});
       const sent = await syncQueue();
       setPendingCount(getQueue().length);
       setSyncing(false);
