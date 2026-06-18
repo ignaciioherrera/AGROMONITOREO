@@ -860,17 +860,42 @@ function AppInner({ session, onLogout }) {
 
   useEffect(() => {
     setPendingCount(getQueue().length);
+
+    let syncTimer = null;
     const trySync = async () => {
+      if (!navigator.onLine) return; // sin señal, no intentar
+      if (getQueue().length === 0) { setPendingCount(0); return; }
       setSyncing(true);
       // Renovar token primero (si el monitoreador vuelve del campo con token vencido)
-      if (navigator.onLine) await refreshSessionIfNeeded().catch(() => {});
+      await refreshSessionIfNeeded().catch(() => {});
       const sent = await syncQueue();
       setPendingCount(getQueue().length);
       setSyncing(false);
+      // Si todavía quedan pendientes, reintentar en 30 seg
+      if (getQueue().length > 0 && navigator.onLine) {
+        syncTimer = setTimeout(trySync, 30000);
+      }
     };
-    trySync();
-    window.addEventListener("online", trySync);
-    return () => window.removeEventListener("online", trySync);
+
+    // Disparar sync al recuperar señal (con 1.5s de espera para que la red esté lista)
+    const onOnline = () => { clearTimeout(syncTimer); syncTimer = setTimeout(trySync, 1500); };
+
+    // Disparar sync cuando el monitoreador vuelve a la app (visibilitychange)
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && navigator.onLine) {
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(trySync, 1000);
+      }
+    };
+
+    trySync(); // intento inicial al abrir la app
+    window.addEventListener("online", onOnline);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearTimeout(syncTimer);
+      window.removeEventListener("online", onOnline);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, []);
 
   // ── WAKE LOCK: pantalla no se apaga durante el monitoreo ──────
