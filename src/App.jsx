@@ -857,21 +857,23 @@ function AppInner({ session, onLogout }) {
   const [pendingCount, setPendingCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
   const fileRef = useRef();
+  const syncingRef = useRef(false); // lock para evitar syncQueue concurrentes
 
   useEffect(() => {
     setPendingCount(getQueue().length);
 
     let syncTimer = null;
     const trySync = async () => {
-      if (!navigator.onLine) return; // sin señal, no intentar
+      if (syncingRef.current) return; // ya hay un sync corriendo, ignorar
+      if (!navigator.onLine) return;
       if (getQueue().length === 0) { setPendingCount(0); return; }
+      syncingRef.current = true;
       setSyncing(true);
-      // Renovar token primero (si el monitoreador vuelve del campo con token vencido)
       await refreshSessionIfNeeded().catch(() => {});
       const sent = await syncQueue();
       setPendingCount(getQueue().length);
       setSyncing(false);
-      // Si todavía quedan pendientes, reintentar en 30 seg
+      syncingRef.current = false;
       if (getQueue().length > 0 && navigator.onLine) {
         syncTimer = setTimeout(trySync, 30000);
       }
