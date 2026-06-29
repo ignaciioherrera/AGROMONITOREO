@@ -266,11 +266,12 @@ const idbDeleteFotos = async (tempId) => {
 // ── SYNC QUEUE con soporte de fotos offline ───────────────────
 const syncQueue = async () => {
   const q = getQueue();
-  if (q.length === 0) return 0;
+  if (q.length === 0) return { sent: 0, error: null };
   // Renovar el token si está por vencer antes de intentar sincronizar
   const authTok = await refreshSessionIfNeeded();
   const pending = [...q];
   const sent = [];
+  let lastError = null;
   for (const item of pending) {
     try {
       const { _queued_at, _id, _tempId, ...payload } = item;
@@ -285,7 +286,11 @@ const syncQueue = async () => {
         },
         body: JSON.stringify(payload)
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const errText = await res.text();
+        lastError = `HTTP ${res.status}: ${errText.slice(0, 300)}`;
+        throw new Error(errText);
+      }
       const [insertado] = await res.json();
       const monitoreoId = insertado?.id;
 
@@ -310,10 +315,13 @@ const syncQueue = async () => {
         }
       }
       sent.push(_id);
-    } catch { break; }
+    } catch (e) {
+      if (!lastError) lastError = e.message || String(e);
+      break;
+    }
   }
   if (sent.length > 0) saveQueue(q.filter(i => !sent.includes(i._id)));
-  return sent.length;
+  return { sent: sent.length, error: lastError };
 };
 
 const C = {
@@ -857,6 +865,7 @@ function AppInner({ session, onLogout }) {
   const [gpsLoading, setGpsLoading] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState(null);
   const fileRef = useRef();
   const syncingRef = useRef(false); // lock para evitar syncQueue concurrentes
 
@@ -872,11 +881,12 @@ function AppInner({ session, onLogout }) {
       setSyncing(true);
       await refreshSessionIfNeeded().catch(() => {});
       try {
-        const sent = await Promise.race([
+        const result = await Promise.race([
           syncQueue(),
-          new Promise(resolve => setTimeout(() => resolve(0), 20000))
+          new Promise(resolve => setTimeout(() => resolve({ sent: 0, error: "Timeout: sin respuesta del servidor" }), 20000))
         ]);
         setPendingCount(getQueue().length);
+        setSyncError(result?.error ?? null);
       } finally {
         setSyncing(false);
         syncingRef.current = false;
@@ -1245,15 +1255,20 @@ function AppInner({ session, onLogout }) {
             {pendingCount > 0 && (
               <div style={{ display: "flex", gap: 6 }}>
                 <button
-                  onClick={async () => { setSyncing(true); try { await Promise.race([syncQueue(), new Promise(r => setTimeout(() => r(0), 20000))]); setPendingCount(getQueue().length); } finally { setSyncing(false); } }}
+                  onClick={async () => { setSyncing(true); try { const r = await Promise.race([syncQueue(), new Promise(res => setTimeout(() => res({ sent:0, error:"Timeout" }), 20000))]); setPendingCount(getQueue().length); setSyncError(r?.error ?? null); } finally { setSyncing(false); } }}
                   disabled={syncing}
                   style={{ background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 20, padding: "4px 12px", color: "#fff", fontFamily: FONT, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
                 >
                   <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#f5c542", display: "inline-block", flexShrink: 0 }} />
                   {syncing ? "Enviando..." : `${pendingCount} pendiente${pendingCount > 1 ? "s" : ""} · Sincronizar`}
                 </button>
+                {syncError && (
+                  <div style={{ width: "100%", marginTop: 4, fontSize: 10, color: "#ff6b6b", fontFamily: FONT, wordBreak: "break-all", background: "rgba(0,0,0,0.3)", borderRadius: 6, padding: "3px 8px" }}>
+                    ✗ {syncError}
+                  </div>
+                )}
                 <button
-                  onClick={() => { saveQueue([]); setPendingCount(0); }}
+                  onClick={() => { saveQueue([]); setPendingCount(0); setSyncError(null); }}
                   style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "4px 10px", color: "#fff", fontFamily: FONT, fontSize: 10, cursor: "pointer" }}
                 >
                   ✕ Limpiar
