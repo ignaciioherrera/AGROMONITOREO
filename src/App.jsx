@@ -1744,7 +1744,7 @@ function AppInner({ session, onLogout }) {
 // PANTALLA DE GASTOS
 // ─────────────────────────────────────────────────────────────────────────
 function GastosScreen({ session }) {
-  const tok = session?.access_token || SUPABASE_KEY;
+  // tok se obtiene fresco en cada operación con refreshSessionIfNeeded()
   const hoy = new Date().toISOString().split("T")[0];
 
   // ── Estado KM ──
@@ -1755,6 +1755,7 @@ function GastosScreen({ session }) {
 
   const fetchLastKm = async () => {
     try {
+      const tok = await refreshSessionIfNeeded();
       const r = await fetch(`${SUPABASE_URL}/rest/v1/monitor_km?order=fecha.desc,created_at.desc&limit=1&select=odometro,fecha`, {
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${tok}` }
       });
@@ -1780,6 +1781,7 @@ function GastosScreen({ session }) {
   const fetchGastos = async () => {
     setLoadingList(true);
     try {
+      const tok = await refreshSessionIfNeeded();
       const r = await fetch(`${SUPABASE_URL}/rest/v1/monitor_gastos?order=fecha.desc,created_at.desc&limit=20`, {
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${tok}` }
       });
@@ -1796,6 +1798,7 @@ function GastosScreen({ session }) {
     const kmRecorridos = lastOdometro ? Math.max(0, odoActual - parseFloat(lastOdometro.odometro)) : null;
     setKmSaving(true);
     try {
+      const tok = await refreshSessionIfNeeded();
       const r = await fetch(`${SUPABASE_URL}/rest/v1/monitor_km`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${tok}`, Prefer: "return=minimal" },
@@ -1816,6 +1819,7 @@ function GastosScreen({ session }) {
     setGastoSaving(true);
     let comprobante_url = null;
     try {
+      const tok = await refreshSessionIfNeeded();
       // Subir foto si hay
       if (fotoFile) {
         const ext = fotoFile.type.includes("png") ? "png" : "jpg";
