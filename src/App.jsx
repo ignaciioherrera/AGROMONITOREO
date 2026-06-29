@@ -851,6 +851,7 @@ function Acordeon({ titulo, icono, badge, children, defaultOpen = false }) {
 
 function AppInner({ session, onLogout }) {
   const [step, setStep] = useState("form");
+  const [tab, setTab] = useState("monitoreo"); // "monitoreo" | "gastos"
   const [photos, setPhotos] = useState([]);
   const [gps, setGps] = useState(null);
   const [gpsLoading, setGpsLoading] = useState(false);
@@ -1265,7 +1266,8 @@ function AppInner({ session, onLogout }) {
         </div>
       </div>
 
-      <div style={{ padding: "16px 14px 120px" }}>
+      {tab === "gastos" ? <GastosScreen session={session} /> : null}
+      <div style={{ padding: "16px 14px 160px", display: tab === "monitoreo" ? "block" : "none" }}>
 
         <SECTION title="IDENTIFICACIÓN" icon="📍" accent>
           <CustomSelect
@@ -1695,6 +1697,243 @@ function AppInner({ session, onLogout }) {
           style={{ width: "100%", border: "none", borderRadius: 14, padding: "16px", fontFamily: FONT, fontSize: 14, fontWeight: 700, letterSpacing: 2, cursor: canSubmit ? "pointer" : "not-allowed", background: canSubmit ? C.accent : C.border, color: canSubmit ? "#fff" : C.textFaint, transition: "all 0.2s" }}>
           {`ENVIAR MONITOREO${photos.length > 0 ? ` · ${photos.length} FOTO${photos.length > 1 ? "S" : ""}` : ""}`}
         </button>
+      </div>
+    </div>
+  );
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────
+// PANTALLA DE GASTOS
+// ─────────────────────────────────────────────────────────────────────────
+function GastosScreen({ session }) {
+  const tok = session?.access_token || SUPABASE_KEY;
+  const hoy = new Date().toISOString().split("T")[0];
+
+  // ── Estado KM ──
+  const [km, setKm] = useState({ fecha: hoy, odometro: "", km_recorridos: "", descripcion: "" });
+  const [kmMsg, setKmMsg] = useState("");
+  const [kmSaving, setKmSaving] = useState(false);
+
+  // ── Estado Gasto ──
+  const [gasto, setGasto] = useState({ fecha: hoy, tipo: "viatico", monto: "", moneda: "ars", descripcion: "" });
+  const [fotoFile, setFotoFile] = useState(null);
+  const [fotoPreview, setFotoPreview] = useState(null);
+  const [gastoMsg, setGastoMsg] = useState("");
+  const [gastoSaving, setGastoSaving] = useState(false);
+  const fotoRef = useRef();
+
+  // ── Lista reciente ──
+  const [gastos, setGastos] = useState([]);
+  const [loadingList, setLoadingList] = useState(false);
+
+  const fetchGastos = async () => {
+    setLoadingList(true);
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/monitor_gastos?order=fecha.desc,created_at.desc&limit=20`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${tok}` }
+      });
+      if (r.ok) setGastos(await r.json());
+    } catch {}
+    setLoadingList(false);
+  };
+
+  useEffect(() => { fetchGastos(); }, []);
+
+  const guardarKm = async () => {
+    if (!km.km_recorridos && !km.odometro) { setKmMsg("⚠ Ingresá el odómetro o los km recorridos"); return; }
+    setKmSaving(true);
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/monitor_km`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${tok}`, Prefer: "return=minimal" },
+        body: JSON.stringify({ fecha: km.fecha, odometro: parseFloat(km.odometro)||null, km_recorridos: parseFloat(km.km_recorridos)||null, descripcion: km.descripcion||null })
+      });
+      if (r.ok) {
+        setKmMsg("✓ KM registrados");
+        setKm({ fecha: hoy, odometro: "", km_recorridos: "", descripcion: "" });
+      } else setKmMsg("✗ Error al guardar");
+    } catch { setKmMsg("✗ Sin conexión"); }
+    setKmSaving(false);
+    setTimeout(() => setKmMsg(""), 3000);
+  };
+
+  const guardarGasto = async () => {
+    if (!gasto.monto) { setGastoMsg("⚠ Ingresá el monto"); return; }
+    setGastoSaving(true);
+    let comprobante_url = null;
+    try {
+      // Subir foto si hay
+      if (fotoFile) {
+        const ext = fotoFile.type.includes("png") ? "png" : "jpg";
+        const path = `comprobantes-monitor/${Date.now()}_comp.${ext}`;
+        const upRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${path}`, {
+          method: "POST",
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${tok}`, "Content-Type": fotoFile.type, "x-upsert": "true" },
+          body: fotoFile
+        });
+        if (upRes.ok) comprobante_url = `${SUPABASE_URL}/storage/v1/object/public/${path}`;
+      }
+
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/monitor_gastos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${tok}`, Prefer: "return=minimal" },
+        body: JSON.stringify({
+          fecha: gasto.fecha, tipo: gasto.tipo,
+          monto: parseFloat(gasto.monto)||0, moneda: gasto.moneda,
+          descripcion: gasto.descripcion||null, comprobante_url
+        })
+      });
+      if (r.ok) {
+        setGastoMsg("✓ Gasto guardado");
+        setGasto({ fecha: hoy, tipo: "viatico", monto: "", moneda: "ars", descripcion: "" });
+        setFotoFile(null); setFotoPreview(null);
+        fetchGastos();
+      } else setGastoMsg("✗ Error al guardar");
+    } catch { setGastoMsg("✗ Sin conexión"); }
+    setGastoSaving(false);
+    setTimeout(() => setGastoMsg(""), 3000);
+  };
+
+  const onFoto = (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    setFotoFile(f);
+    const reader = new FileReader();
+    reader.onload = (ev) => setFotoPreview(ev.target.result);
+    reader.readAsDataURL(f);
+  };
+
+  const TIPOS = ["viatico","combustible","repuesto","herramienta","otro"];
+  const TIPO_LABEL = { viatico:"Viático",combustible:"Combustible",repuesto:"Repuesto/Reparación",herramienta:"Herramienta",otro:"Otro" };
+  const TIPO_ICON = { viatico:"🏨",combustible:"⛽",repuesto:"🔧",herramienta:"🛠",otro:"📄" };
+
+  const inp = { width:"100%", padding:"12px 14px", borderRadius:10, fontSize:15, border:`1.5px solid ${C.border}`, background:C.surface, color:C.text, fontFamily:SANS, outline:"none", WebkitAppearance:"none" };
+  const lbl = { fontSize:11, fontWeight:700, color:C.textFaint, textTransform:"uppercase", letterSpacing:0.5, marginBottom:5, display:"block", fontFamily:SANS };
+  const card = { background:C.surface, borderRadius:16, padding:18, marginBottom:14, boxShadow:"0 1px 4px rgba(0,0,0,0.07)" };
+  const btn = (dis) => ({ width:"100%", padding:"14px", border:"none", borderRadius:12, background: dis ? C.border : C.accent, color: dis ? C.textFaint : "#fff", fontFamily:FONT, fontSize:14, fontWeight:700, letterSpacing:1.5, cursor: dis ? "default" : "pointer" });
+
+  return (
+    <div style={{ padding:"14px 14px 180px", maxWidth:430, margin:"0 auto" }}>
+
+      {/* KM de la moto */}
+      <div style={card}>
+        <div style={{ fontSize:14, fontWeight:700, color:C.accent, fontFamily:FONT, letterSpacing:1, marginBottom:14 }}>🏍 KM DE LA MOTO</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
+          <div>
+            <label style={lbl}>Fecha</label>
+            <input type="date" value={km.fecha} onChange={e=>setKm(p=>({...p,fecha:e.target.value}))} style={inp} />
+          </div>
+          <div>
+            <label style={lbl}>Odómetro (km)</label>
+            <input type="number" value={km.odometro} onChange={e=>setKm(p=>({...p,odometro:e.target.value}))} placeholder="Ej: 12450" style={inp} />
+          </div>
+          <div>
+            <label style={lbl}>KM recorridos</label>
+            <input type="number" value={km.km_recorridos} onChange={e=>setKm(p=>({...p,km_recorridos:e.target.value}))} placeholder="KM de hoy" style={inp} />
+          </div>
+          <div>
+            <label style={lbl}>Descripción</label>
+            <input type="text" value={km.descripcion} onChange={e=>setKm(p=>({...p,descripcion:e.target.value}))} placeholder="Ej: Gregoret + Bertoli" style={inp} />
+          </div>
+        </div>
+        <button onClick={guardarKm} disabled={kmSaving} style={btn(kmSaving)}>
+          {kmSaving ? "Guardando..." : "REGISTRAR KM"}
+        </button>
+        {kmMsg && <div style={{ marginTop:8, textAlign:"center", fontSize:13, color: kmMsg.startsWith("✓") ? C.accent : C.danger, fontWeight:600 }}>{kmMsg}</div>}
+      </div>
+
+      {/* Cargar gasto */}
+      <div style={card}>
+        <div style={{ fontSize:14, fontWeight:700, color:C.accent, fontFamily:FONT, letterSpacing:1, marginBottom:14 }}>💰 NUEVO GASTO</div>
+
+        {/* Tipo de gasto — chips */}
+        <label style={lbl}>Tipo</label>
+        <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:12 }}>
+          {TIPOS.map(t => (
+            <button key={t} onClick={()=>setGasto(p=>({...p,tipo:t}))}
+              style={{ padding:"7px 12px", borderRadius:20, border:`1.5px solid ${gasto.tipo===t ? C.accent : C.border}`, background: gasto.tipo===t ? C.accentLight : C.surface, color: gasto.tipo===t ? C.accent : C.textFaint, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:SANS }}>
+              {TIPO_ICON[t]} {TIPO_LABEL[t]}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr", gap:10, marginBottom:10 }}>
+          <div>
+            <label style={lbl}>Monto *</label>
+            <input type="number" value={gasto.monto} onChange={e=>setGasto(p=>({...p,monto:e.target.value}))} placeholder="0.00" style={inp} />
+          </div>
+          <div>
+            <label style={lbl}>Moneda</label>
+            <select value={gasto.moneda} onChange={e=>setGasto(p=>({...p,moneda:e.target.value}))} style={inp}>
+              <option value="ars">ARS $</option>
+              <option value="usd">USD u$s</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{ marginBottom:10 }}>
+          <label style={lbl}>Fecha</label>
+          <input type="date" value={gasto.fecha} onChange={e=>setGasto(p=>({...p,fecha:e.target.value}))} style={inp} />
+        </div>
+
+        <div style={{ marginBottom:12 }}>
+          <label style={lbl}>Descripción</label>
+          <input type="text" value={gasto.descripcion} onChange={e=>setGasto(p=>({...p,descripcion:e.target.value}))} placeholder="Ej: Hotel Rosario, cena, nafta YPF..." style={inp} />
+        </div>
+
+        {/* Foto comprobante */}
+        <div style={{ marginBottom:14 }}>
+          <label style={lbl}>Foto comprobante</label>
+          <input ref={fotoRef} type="file" accept="image/*" capture="environment" style={{ display:"none" }} onChange={onFoto} />
+          {fotoPreview ? (
+            <div style={{ position:"relative", display:"inline-block" }}>
+              <img src={fotoPreview} alt="comprobante" style={{ width:"100%", maxHeight:200, objectFit:"cover", borderRadius:10, display:"block" }} />
+              <button onClick={()=>{setFotoFile(null);setFotoPreview(null);}} style={{ position:"absolute", top:6, right:6, background:"rgba(0,0,0,0.6)", border:"none", borderRadius:"50%", width:28, height:28, color:"#fff", fontSize:14, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
+            </div>
+          ) : (
+            <button onClick={()=>fotoRef.current.click()}
+              style={{ width:"100%", padding:"14px", border:`2px dashed ${C.border}`, borderRadius:12, background:"transparent", color:C.textFaint, fontSize:14, cursor:"pointer", fontFamily:SANS }}>
+              📸 Sacar foto / elegir imagen
+            </button>
+          )}
+        </div>
+
+        <button onClick={guardarGasto} disabled={gastoSaving} style={btn(gastoSaving)}>
+          {gastoSaving ? "Guardando..." : "GUARDAR GASTO"}
+        </button>
+        {gastoMsg && <div style={{ marginTop:8, textAlign:"center", fontSize:13, color: gastoMsg.startsWith("✓") ? C.accent : C.danger, fontWeight:600 }}>{gastoMsg}</div>}
+      </div>
+
+      {/* Historial reciente */}
+      <div style={card}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+          <div style={{ fontSize:14, fontWeight:700, color:C.accent, fontFamily:FONT, letterSpacing:1 }}>📋 ÚLTIMOS GASTOS</div>
+          <button onClick={fetchGastos} style={{ background:"none", border:"none", color:C.textFaint, fontSize:18, cursor:"pointer" }}>↻</button>
+        </div>
+        {loadingList ? (
+          <div style={{ textAlign:"center", color:C.textFaint, padding:20, fontSize:13 }}>Cargando...</div>
+        ) : gastos.length === 0 ? (
+          <div style={{ textAlign:"center", color:C.textFaint, padding:20, fontSize:13 }}>Sin gastos registrados</div>
+        ) : gastos.map(g => (
+          <div key={g.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", padding:"10px 0", borderBottom:`1px solid ${C.border}` }}>
+            <div style={{ flex:1 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                <span style={{ fontSize:16 }}>{TIPO_ICON[g.tipo]||"📄"}</span>
+                <span style={{ fontSize:13, fontWeight:700, color:C.text, fontFamily:SANS }}>{TIPO_LABEL[g.tipo]||g.tipo}</span>
+                <span style={{ fontSize:11, color:C.textFaint }}>{g.fecha}</span>
+              </div>
+              {g.descripcion && <div style={{ fontSize:12, color:C.textFaint, marginTop:2, marginLeft:22 }}>{g.descripcion}</div>}
+              {g.comprobante_url && <a href={g.comprobante_url} target="_blank" rel="noreferrer" style={{ fontSize:11, color:C.accent, marginLeft:22, display:"block", marginTop:2 }}>📎 Ver comprobante</a>}
+            </div>
+            <div style={{ textAlign:"right", flexShrink:0 }}>
+              <div style={{ fontSize:15, fontWeight:700, color: g.aprobado ? C.accent : C.text }}>
+                {g.moneda === "usd" ? "u$s" : "$"} {parseFloat(g.monto).toLocaleString("es-AR",{minimumFractionDigits:0})}
+              </div>
+              {g.aprobado && <div style={{ fontSize:10, color:C.accent }}>✓ aprobado</div>}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
