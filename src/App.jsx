@@ -1867,8 +1867,12 @@ function GastosScreen({ session }) {
         setGasto({ fecha: hoy, tipo: "viatico", monto: "", moneda: "ars", descripcion: "" });
         setFotoFile(null); setFotoPreview(null);
         fetchGastos();
-      } else setGastoMsg("✗ Error al guardar");
-    } catch { setGastoMsg("✗ Sin conexión"); }
+      } else {
+        const errTxt = await r.text().catch(()=>"");
+        console.error("guardarGasto error:", r.status, errTxt);
+        setGastoMsg(`✗ Error ${r.status}: ${errTxt.slice(0,80)}`);
+      }
+    } catch(e) { setGastoMsg("✗ Sin conexión: " + (e.message||"")); }
     setGastoSaving(false);
     setTimeout(() => setGastoMsg(""), 3000);
   };
