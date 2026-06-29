@@ -871,10 +871,16 @@ function AppInner({ session, onLogout }) {
       syncingRef.current = true;
       setSyncing(true);
       await refreshSessionIfNeeded().catch(() => {});
-      const sent = await syncQueue();
-      setPendingCount(getQueue().length);
-      setSyncing(false);
-      syncingRef.current = false;
+      try {
+        const sent = await Promise.race([
+          syncQueue(),
+          new Promise(resolve => setTimeout(() => resolve(0), 20000))
+        ]);
+        setPendingCount(getQueue().length);
+      } finally {
+        setSyncing(false);
+        syncingRef.current = false;
+      }
       if (getQueue().length > 0 && navigator.onLine) {
         syncTimer = setTimeout(trySync, 30000);
       }
@@ -1239,7 +1245,7 @@ function AppInner({ session, onLogout }) {
             {pendingCount > 0 && (
               <div style={{ display: "flex", gap: 6 }}>
                 <button
-                  onClick={async () => { setSyncing(true); await syncQueue(); setPendingCount(getQueue().length); setSyncing(false); }}
+                  onClick={async () => { setSyncing(true); try { await Promise.race([syncQueue(), new Promise(r => setTimeout(() => r(0), 20000))]); setPendingCount(getQueue().length); } finally { setSyncing(false); } }}
                   disabled={syncing}
                   style={{ background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 20, padding: "4px 12px", color: "#fff", fontFamily: FONT, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
                 >
