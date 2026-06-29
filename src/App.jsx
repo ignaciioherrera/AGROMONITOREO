@@ -1104,7 +1104,7 @@ function AppInner({ session, onLogout }) {
       };
       try {
         // Insert y obtener ID para subir fotos
-        const authTok = session?.access_token || SUPABASE_KEY;
+        const authTok = await refreshSessionIfNeeded();
         const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/monitoreos`, {
           method: "POST",
           headers: {
