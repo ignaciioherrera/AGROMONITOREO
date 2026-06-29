@@ -868,6 +868,7 @@ function AppInner({ session, onLogout }) {
   const [syncError, setSyncError] = useState(null);
   const fileRef = useRef();
   const syncingRef = useRef(false); // lock para evitar syncQueue concurrentes
+  const submittingRef = useRef(false); // lock para evitar doble envío
 
   useEffect(() => {
     setPendingCount(getQueue().length);
@@ -1043,7 +1044,8 @@ function AppInner({ session, onLogout }) {
   const canSubmit = data.empresa && data.campo && data.lote && data.cultivo;
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (!canSubmit || submittingRef.current) return;
+    submittingRef.current = true;
     setStep("confirm");
     try {
       const payload = {
@@ -1137,7 +1139,8 @@ function AppInner({ session, onLogout }) {
           }
         }
 
-        await syncQueue();
+        // No llamar syncQueue() aquí para evitar duplicados;
+        // el timer automático se encarga de los pendientes
         setPendingCount(getQueue().length);
       } catch {
         // Sin conexión: guardar datos en localStorage y fotos en IndexedDB
@@ -1156,6 +1159,8 @@ function AppInner({ session, onLogout }) {
       console.error(err);
       setStep("form");
       alert("Error inesperado. Intentá de nuevo.");
+    } finally {
+      submittingRef.current = false;
     }
   };
 
