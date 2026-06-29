@@ -216,7 +216,14 @@ const getQueue = () => {
 const saveQueue = (q) => localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
 const addToQueue = (payload) => {
   const q = getQueue();
+  // Si ya hay un ítem con el mismo _submitId, no duplicar
+  if (payload._submitId && q.some(item => item._submitId === payload._submitId)) return;
   q.push({ ...payload, _queued_at: new Date().toISOString(), _id: Date.now() });
+  saveQueue(q);
+};
+const removeFromQueueBySubmitId = (submitId) => {
+  if (!submitId) return;
+  const q = getQueue().filter(item => item._submitId !== submitId);
   saveQueue(q);
 };
 
@@ -287,9 +294,14 @@ const syncQueue = async () => {
         body: JSON.stringify(payload)
       });
       if (!res.ok) {
-        const errText = await res.text();
-        lastError = `HTTP ${res.status}: ${errText.slice(0, 300)}`;
-        throw new Error(errText);
+        if (res.status === 409) {
+          // Ya existe en el servidor — idempotente, sacar de cola sin error
+          console.warn("syncQueue: ítem ya existía (409), ignorando duplicado");
+        } else {
+          const errText = await res.text();
+          lastError = `HTTP ${res.status}: ${errText.slice(0, 300)}`;
+          throw new Error(errText);
+        }
       }
       const [insertado] = await res.json();
       const monitoreoId = insertado?.id;
@@ -1048,6 +1060,8 @@ function AppInner({ session, onLogout }) {
     submittingRef.current = true;
     setStep("confirm");
     try {
+      // ID único por envío — sirve para detectar y descartar duplicados
+      const _submitId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       const payload = {
         empresa: data.empresa,
         campo: data.campo,
@@ -1103,6 +1117,7 @@ function AppInner({ session, onLogout }) {
           : null,
         monitoreador_email: session?.user?.email || null,
         monitoreador_nombre: session?.user?.user_metadata?.nombre || session?.user?.email?.split("@")[0] || null,
+        client_submit_id: _submitId,
       };
       try {
         // Insert y obtener ID para subir fotos
@@ -1139,13 +1154,14 @@ function AppInner({ session, onLogout }) {
           }
         }
 
-        // No llamar syncQueue() aquí para evitar duplicados;
-        // el timer automático se encarga de los pendientes
+        // Si por race condition el mismo ítem entró en la cola, sacarlo
+        removeFromQueueBySubmitId(_submitId);
+        // El timer automático se encarga de otros pendientes
         setPendingCount(getQueue().length);
       } catch {
         // Sin conexión: guardar datos en localStorage y fotos en IndexedDB
         const tempId = Date.now();
-        addToQueue({ ...payload, _tempId: tempId });
+        addToQueue({ ...payload, _submitId, _tempId: tempId });
         if (photos.length > 0) await idbSaveFotos(tempId, photos);
         setPendingCount(getQueue().length);
       }
