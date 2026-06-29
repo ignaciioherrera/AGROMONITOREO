@@ -1691,12 +1691,28 @@ function AppInner({ session, onLogout }) {
 
       </div>
 
-      <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: C.surface, borderTop: `1px solid ${C.border}`, padding: "14px 16px 24px", zIndex: 200 }}>
-        {!canSubmit && <div style={{ fontFamily: SANS, fontSize: 12, color: C.warn, textAlign: "center", marginBottom: 10 }}>⚠ Completá Empresa, Campo, Lote y Cultivo para enviar</div>}
-        <button onClick={handleSubmit} disabled={!canSubmit}
-          style={{ width: "100%", border: "none", borderRadius: 14, padding: "16px", fontFamily: FONT, fontSize: 14, fontWeight: 700, letterSpacing: 2, cursor: canSubmit ? "pointer" : "not-allowed", background: canSubmit ? C.accent : C.border, color: canSubmit ? "#fff" : C.textFaint, transition: "all 0.2s" }}>
-          {`ENVIAR MONITOREO${photos.length > 0 ? ` · ${photos.length} FOTO${photos.length > 1 ? "S" : ""}` : ""}`}
-        </button>
+      <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: C.surface, borderTop: `1px solid ${C.border}`, zIndex: 200 }}>
+        {tab === "monitoreo" && (
+          <div style={{ padding: "14px 16px 24px" }}>
+            {!canSubmit && <div style={{ fontFamily: SANS, fontSize: 12, color: C.warn, textAlign: "center", marginBottom: 10 }}>⚠ Completá Empresa, Campo, Lote y Cultivo para enviar</div>}
+            <button onClick={handleSubmit} disabled={!canSubmit}
+              style={{ width: "100%", border: "none", borderRadius: 14, padding: "16px", fontFamily: FONT, fontSize: 14, fontWeight: 700, letterSpacing: 2, cursor: canSubmit ? "pointer" : "not-allowed", background: canSubmit ? C.accent : C.border, color: canSubmit ? "#fff" : C.textFaint, transition: "all 0.2s" }}>
+              {`ENVIAR MONITOREO${photos.length > 0 ? ` · ${photos.length} FOTO${photos.length > 1 ? "S" : ""}` : ""}`}
+            </button>
+          </div>
+        )}
+        <div style={{ display: "flex", borderTop: tab === "monitoreo" ? `1px solid ${C.border}` : "none" }}>
+          {[["monitoreo","📋","Monitoreo"],["gastos","💰","Gastos"]].map(([k,ic,lb]) => (
+            <button key={k} onClick={() => setTab(k)}
+              style={{ flex:1, padding:"10px 0 14px", background:"none", border:"none", cursor:"pointer",
+                color: tab===k ? C.accent : C.textFaint,
+                borderTop: tab===k ? `2px solid ${C.accent}` : "2px solid transparent",
+                display:"flex", flexDirection:"column", alignItems:"center", gap:2 }}>
+              <span style={{ fontSize:20 }}>{ic}</span>
+              <span style={{ fontSize:11, fontFamily:SANS, fontWeight: tab===k ? 700 : 400 }}>{lb}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
