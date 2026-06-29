@@ -1727,9 +1727,22 @@ function GastosScreen({ session }) {
   const hoy = new Date().toISOString().split("T")[0];
 
   // ── Estado KM ──
-  const [km, setKm] = useState({ fecha: hoy, odometro: "", km_recorridos: "", descripcion: "" });
+  const [km, setKm] = useState({ fecha: hoy, odometro: "", descripcion: "" });
   const [kmMsg, setKmMsg] = useState("");
   const [kmSaving, setKmSaving] = useState(false);
+  const [lastOdometro, setLastOdometro] = useState(null); // último odómetro guardado
+
+  const fetchLastKm = async () => {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/monitor_km?order=fecha.desc,created_at.desc&limit=1&select=odometro,fecha`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${tok}` }
+      });
+      if (r.ok) {
+        const data = await r.json();
+        if (data.length > 0 && data[0].odometro) setLastOdometro(data[0]);
+      }
+    } catch {}
+  };
 
   // ── Estado Gasto ──
   const [gasto, setGasto] = useState({ fecha: hoy, tipo: "viatico", monto: "", moneda: "ars", descripcion: "" });
@@ -1754,24 +1767,27 @@ function GastosScreen({ session }) {
     setLoadingList(false);
   };
 
-  useEffect(() => { fetchGastos(); }, []);
+  useEffect(() => { fetchGastos(); fetchLastKm(); }, []);
 
   const guardarKm = async () => {
-    if (!km.km_recorridos && !km.odometro) { setKmMsg("⚠ Ingresá el odómetro o los km recorridos"); return; }
+    if (!km.odometro) { setKmMsg("⚠ Ingresá el odómetro actual"); return; }
+    const odoActual = parseFloat(km.odometro);
+    const kmRecorridos = lastOdometro ? Math.max(0, odoActual - parseFloat(lastOdometro.odometro)) : null;
     setKmSaving(true);
     try {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/monitor_km`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${tok}`, Prefer: "return=minimal" },
-        body: JSON.stringify({ fecha: km.fecha, odometro: parseFloat(km.odometro)||null, km_recorridos: parseFloat(km.km_recorridos)||null, descripcion: km.descripcion||null })
+        body: JSON.stringify({ fecha: km.fecha, odometro: odoActual, km_recorridos: kmRecorridos, descripcion: km.descripcion||null })
       });
       if (r.ok) {
-        setKmMsg("✓ KM registrados");
-        setKm({ fecha: hoy, odometro: "", km_recorridos: "", descripcion: "" });
+        setKmMsg(`✓ Registrado${kmRecorridos !== null ? ` · ${kmRecorridos} km hoy` : ""}`);
+        setLastOdometro({ odometro: odoActual, fecha: km.fecha });
+        setKm({ fecha: hoy, odometro: "", descripcion: "" });
       } else setKmMsg("✗ Error al guardar");
     } catch { setKmMsg("✗ Sin conexión"); }
     setKmSaving(false);
-    setTimeout(() => setKmMsg(""), 3000);
+    setTimeout(() => setKmMsg(""), 4000);
   };
 
   const guardarGasto = async () => {
@@ -1834,27 +1850,37 @@ function GastosScreen({ session }) {
 
       {/* KM de la moto */}
       <div style={card}>
-        <div style={{ fontSize:14, fontWeight:700, color:C.accent, fontFamily:FONT, letterSpacing:1, marginBottom:14 }}>🏍 KM DE LA MOTO</div>
+        <div style={{ fontSize:14, fontWeight:700, color:C.accent, fontFamily:FONT, letterSpacing:1, marginBottom:4 }}>🏍 KM DE LA MOTO</div>
+        {lastOdometro && (
+          <div style={{ fontSize:12, color:C.textFaint, fontFamily:SANS, marginBottom:14 }}>
+            Último registro: <strong>{parseFloat(lastOdometro.odometro).toLocaleString("es-AR")} km</strong> · {lastOdometro.fecha}
+          </div>
+        )}
+        <div style={{ marginBottom:10 }}>
+          <label style={lbl}>Odómetro actual (km)</label>
+          <input type="number" inputMode="numeric" value={km.odometro}
+            onChange={e=>setKm(p=>({...p,odometro:e.target.value}))}
+            placeholder="Ej: 12450" style={{ ...inp, fontSize:22, fontWeight:700, textAlign:"center" }} />
+        </div>
+        {km.odometro && lastOdometro && parseFloat(km.odometro) > parseFloat(lastOdometro.odometro) && (
+          <div style={{ background:C.accentLight, borderRadius:10, padding:"10px 14px", marginBottom:10, textAlign:"center" }}>
+            <span style={{ fontSize:13, color:C.accent, fontWeight:700 }}>
+              🏍 {(parseFloat(km.odometro) - parseFloat(lastOdometro.odometro)).toLocaleString("es-AR")} km recorridos hoy
+            </span>
+          </div>
+        )}
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
           <div>
             <label style={lbl}>Fecha</label>
             <input type="date" value={km.fecha} onChange={e=>setKm(p=>({...p,fecha:e.target.value}))} style={inp} />
           </div>
           <div>
-            <label style={lbl}>Odómetro (km)</label>
-            <input type="number" value={km.odometro} onChange={e=>setKm(p=>({...p,odometro:e.target.value}))} placeholder="Ej: 12450" style={inp} />
-          </div>
-          <div>
-            <label style={lbl}>KM recorridos</label>
-            <input type="number" value={km.km_recorridos} onChange={e=>setKm(p=>({...p,km_recorridos:e.target.value}))} placeholder="KM de hoy" style={inp} />
-          </div>
-          <div>
-            <label style={lbl}>Descripción</label>
-            <input type="text" value={km.descripcion} onChange={e=>setKm(p=>({...p,descripcion:e.target.value}))} placeholder="Ej: Gregoret + Bertoli" style={inp} />
+            <label style={lbl}>Campos/Lotes</label>
+            <input type="text" value={km.descripcion} onChange={e=>setKm(p=>({...p,descripcion:e.target.value}))} placeholder="Ej: Gregoret, Bertoli" style={inp} />
           </div>
         </div>
         <button onClick={guardarKm} disabled={kmSaving} style={btn(kmSaving)}>
-          {kmSaving ? "Guardando..." : "REGISTRAR KM"}
+          {kmSaving ? "Guardando..." : "REGISTRAR ODÓMETRO"}
         </button>
         {kmMsg && <div style={{ marginTop:8, textAlign:"center", fontSize:13, color: kmMsg.startsWith("✓") ? C.accent : C.danger, fontWeight:600 }}>{kmMsg}</div>}
       </div>
