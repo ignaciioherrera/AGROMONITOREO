@@ -1816,7 +1816,9 @@ function GastosScreen({ session }) {
     setLoadingList(true);
     try {
       const tok = await refreshSessionIfNeeded();
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/monitor_gastos?order=fecha.desc,created_at.desc&limit=20`, {
+      const userId = session?.user?.id;
+      const userFilter = userId ? `&user_id=eq.${userId}` : "";
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/monitor_gastos?order=fecha.desc,created_at.desc&limit=20${userFilter}`, {
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${tok}` }
       });
       if (r.ok) setGastos(await r.json());
