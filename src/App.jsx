@@ -130,8 +130,21 @@ const refreshSessionIfNeeded = async () => {
     storeSession({ ...stored, ...newSession });
     return newSession.access_token;
   } catch {
-    // Sin señal o refresh_token vencido → usar el token que hay (irá a la cola offline)
+    // Sin señal → usar el token guardado (puede estar vencido, se manejará en la llamada)
     return stored.access_token || SUPABASE_KEY;
+  }
+};
+
+// Fuerza un refresh del token ignorando el cache — para usar después de un 401
+const forceRefreshSession = async () => {
+  const stored = getStoredSession();
+  if (!stored?.refresh_token) return null;
+  try {
+    const newSession = await authRefreshSession(stored.refresh_token);
+    storeSession({ ...stored, ...newSession });
+    return newSession.access_token;
+  } catch {
+    return null; // refresh_token también vencido → debe re-login
   }
 };
 
@@ -1853,15 +1866,27 @@ function GastosScreen({ session }) {
         if (upRes.ok) comprobante_url = `${SUPABASE_URL}/storage/v1/object/public/${path}`;
       }
 
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/monitor_gastos`, {
+      const doGuardar = (authTok) => fetch(`${SUPABASE_URL}/rest/v1/monitor_gastos`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${tok}`, Prefer: "return=minimal" },
+        headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${authTok}`, Prefer: "return=minimal" },
         body: JSON.stringify({
           fecha: gasto.fecha, tipo: gasto.tipo,
           monto: parseFloat(gasto.monto)||0, moneda: gasto.moneda,
           descripcion: gasto.descripcion||null, comprobante_url
         })
       });
+      let r = await doGuardar(tok);
+      // Si el JWT expiró, intentar refresh y reintentar una vez
+      if (r.status === 401) {
+        const nuevoTok = await forceRefreshSession();
+        if (nuevoTok) {
+          r = await doGuardar(nuevoTok);
+        } else {
+          setGastoMsg("✗ Sesión expirada — cerrá sesión y volvé a entrar");
+          setGastoSaving(false);
+          return;
+        }
+      }
       if (r.ok) {
         setGastoMsg("✓ Gasto guardado");
         setGasto({ fecha: hoy, tipo: "viatico", monto: "", moneda: "ars", descripcion: "" });
