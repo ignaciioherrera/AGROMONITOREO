@@ -1886,9 +1886,9 @@ function GastosScreen({ session }) {
     reader.readAsDataURL(f);
   };
 
-  const TIPOS = ["viatico","combustible","repuesto","herramienta","otro"];
-  const TIPO_LABEL = { viatico:"Viático",combustible:"Combustible",repuesto:"Repuesto/Reparación",herramienta:"Herramienta",otro:"Otro" };
-  const TIPO_ICON = { viatico:"🏨",combustible:"⛽",repuesto:"🔧",herramienta:"🛠",otro:"📄" };
+  const TIPOS = ["viatico","combustible","repuesto","moto","herramienta","otro"];
+  const TIPO_LABEL = { viatico:"Viático",combustible:"Combustible",repuesto:"Repuesto/Rep.",moto:"Service",herramienta:"Herramienta",otro:"Otro" };
+  const TIPO_ICON = { viatico:"🏨",combustible:"⛽",repuesto:"🔧",moto:"🏍",herramienta:"🛠",otro:"📄" };
 
   const inp = { width:"100%", padding:"12px 14px", borderRadius:10, fontSize:15, border:`1.5px solid ${C.border}`, background:C.surface, color:C.text, fontFamily:SANS, outline:"none", WebkitAppearance:"none" };
   const lbl = { fontSize:11, fontWeight:700, color:C.textFaint, textTransform:"uppercase", letterSpacing:0.5, marginBottom:5, display:"block", fontFamily:SANS };
