@@ -1,4 +1,4 @@
-const CACHE_NAME = "agro-monitor-v9";
+const CACHE_NAME = "agro-monitor-v8";
 
 self.addEventListener("install", (e) => {
   e.waitUntil(

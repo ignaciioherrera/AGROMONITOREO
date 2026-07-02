@@ -310,6 +310,8 @@ const syncQueue = async () => {
         if (res.status === 409) {
           // Ya existe en el servidor — idempotente, sacar de cola sin error
           console.warn("syncQueue: ítem ya existía (409), ignorando duplicado");
+          sent.push(_id); // marcar como procesado para sacarlo de la cola
+          continue;       // NO intentar parsear el body de error como array
         } else {
           const errText = await res.text();
           lastError = `HTTP ${res.status}: ${errText.slice(0, 300)}`;
@@ -907,10 +909,8 @@ function AppInner({ session, onLogout }) {
       setSyncing(true);
       await refreshSessionIfNeeded().catch(() => {});
       try {
-        const result = await Promise.race([
-          syncQueue(),
-          new Promise(resolve => setTimeout(() => resolve({ sent: 0, error: "Timeout: sin respuesta del servidor" }), 20000))
-        ]);
+        // Sin timeout artificial — syncQueue corre hasta completar para no perder datos
+        const result = await syncQueue();
         setPendingCount(getQueue().length);
         setSyncError(result?.error ?? null);
       } finally {
@@ -1300,7 +1300,7 @@ function AppInner({ session, onLogout }) {
             {pendingCount > 0 && (
               <div style={{ display: "flex", gap: 6 }}>
                 <button
-                  onClick={async () => { setSyncing(true); try { const r = await Promise.race([syncQueue(), new Promise(res => setTimeout(() => res({ sent:0, error:"Timeout" }), 20000))]); setPendingCount(getQueue().length); setSyncError(r?.error ?? null); } finally { setSyncing(false); } }}
+                  onClick={async () => { setSyncing(true); try { const r = await syncQueue(); setPendingCount(getQueue().length); setSyncError(r?.error ?? null); } finally { setSyncing(false); } }}
                   disabled={syncing}
                   style={{ background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 20, padding: "4px 12px", color: "#fff", fontFamily: FONT, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
                 >
@@ -1313,7 +1313,7 @@ function AppInner({ session, onLogout }) {
                   </div>
                 )}
                 <button
-                  onClick={() => { saveQueue([]); setPendingCount(0); setSyncError(null); }}
+                  onClick={() => { if (!window.confirm(`¿Borrar ${pendingCount} monitoreo${pendingCount !== 1 ? "s" : ""} pendiente${pendingCount !== 1 ? "s" : ""} sin enviar? Los datos se perderán permanentemente.`)) return; saveQueue([]); setPendingCount(0); setSyncError(null); }}
                   style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "4px 10px", color: "#fff", fontFamily: FONT, fontSize: 10, cursor: "pointer" }}
                 >
                   ✕ Limpiar
@@ -2079,6 +2079,4 @@ export default function App() {
     setSession(null);
   };
 
-  if (!session) return <ErrorBoundary><LoginScreen onLogin={handleLogin} /></ErrorBoundary>;
-  return <ErrorBoundary><AppInner session={session} onLogout={handleLogout} /></ErrorBoundary>;
-}
+  if (!sessi
