@@ -2067,4 +2067,21 @@ function GastosScreen({ session }) {
             </div>
           </div>
         ))}
-      </div
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [session, setSession] = useState(() => getStoredSession());
+
+  const handleLogin = (s) => setSession(s);
+  const handleLogout = async () => {
+    if (session?.access_token) await authSignOut(session.access_token).catch(() => {});
+    clearSession();
+    setSession(null);
+  };
+
+  if (!session) return <ErrorBoundary><LoginScreen onLogin={handleLogin} /></ErrorBoundary>;
+  return <ErrorBoundary><AppInner session={session} onLogout={handleLogout} /></ErrorBoundary>;
+}
