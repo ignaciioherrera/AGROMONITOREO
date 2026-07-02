@@ -294,7 +294,7 @@ const syncQueue = async () => {
   let lastError = null;
   for (const item of pending) {
     try {
-      const { _queued_at, _id, _tempId, ...payload } = item;
+      const { _queued_at, _id, _tempId, _submitId, client_submit_id, ...payload } = item;
       // Insertar y obtener ID para poder subir fotos
       const res = await fetch(`${SUPABASE_URL}/rest/v1/monitoreos`, {
         method: "POST",
