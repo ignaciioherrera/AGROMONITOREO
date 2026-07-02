@@ -1276,6 +1276,17 @@ function AppInner({ session, onLogout }) {
           <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontFamily: FONT, fontSize: 11, color: "#555" }}>{session?.user?.user_metadata?.nombre || session?.user?.email?.split("@")[0]}</span>
+              <button onClick={async () => {
+                try {
+                  if ("serviceWorker" in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(regs.map(r => r.unregister()));
+                  }
+                  const cacheKeys = await caches.keys();
+                  await Promise.all(cacheKeys.map(k => caches.delete(k)));
+                  window.location.reload(true);
+                } catch(e) { window.location.reload(true); }
+              }} style={{ background: "rgba(0,0,0,0.07)", border: "1px solid #ccc", borderRadius: 20, padding: "3px 10px", color: "#1a7a3a", fontFamily: FONT, fontSize: 10, cursor: "pointer" }}>⬆ Actualizar</button>
               <button onClick={onLogout} style={{ background: "rgba(0,0,0,0.07)", border: "1px solid #ccc", borderRadius: 20, padding: "3px 10px", color: "#555", fontFamily: FONT, fontSize: 10, cursor: "pointer" }}>Salir</button>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
