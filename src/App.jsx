@@ -423,6 +423,9 @@ const EMPRESAS = [
   { empresa: "VACHETTA", campos: [
     { campo: "DON ALBINO", lotes: ["VACHETTA LOTE 1","VACHETTA LOTE 2"] },
   ]},
+  { empresa: "BERTOLI VARRONE/ALGOSERVICIOS/SEVILA", campos: [
+    { campo: "DON NICOLA", lotes: ["DON NICOLA LOTE 1","DON NICOLA LOTE 2","DON NICOLA LOTE 3","DON NICOLA LOTE 4","DON NICOLA LOTE 5","DON NICOLA LOTE 6","DON NICOLA LOTE 7","DON NICOLA LOTE 8","DON NICOLA LOTE 9","DON NICOLA LOTE 10","DON NICOLA LOTE 11","DON NICOLA LOTE 12"] },
+  ]},
 ];
 const CAMPOS = EMPRESAS.flatMap(e => e.campos.map(c => ({ ...c, empresa: e.empresa })));
 const LOTES = CAMPOS.flatMap(c => c.lotes);
@@ -2064,19 +2067,4 @@ function GastosScreen({ session }) {
             </div>
           </div>
         ))}
-      </div>
-    </div>
-  );
-}
-
-export default function App() {
-  const [session, setSession] = useState(() => getStoredSession());
-
-  const handleLogin = (s) => setSession(s);
-  const handleLogout = async () => {
-    if (session?.access_token) await authSignOut(session.access_token).catch(() => {});
-    clearSession();
-    setSession(null);
-  };
-
-  if (!sessi
+      </div
