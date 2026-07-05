@@ -2139,4 +2139,4 @@ export default function App() {
 
   if (!session) return <ErrorBoundary><LoginScreen onLogin={handleLogin} /></ErrorBoundary>;
   return <ErrorBoundary><AppInner session={session} onLogout={handleLogout} /></ErrorBoundary>;
-}                                                                                                                            
+}
