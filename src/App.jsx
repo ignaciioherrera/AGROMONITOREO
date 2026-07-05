@@ -374,7 +374,50 @@ const C = {
 const FONT = `'DM Mono', 'Courier New', monospace`;
 const SANS = `'DM Sans', 'Segoe UI', sans-serif`;
 
-const EMPRESAS = [
+// ── ESTRUCTURA DINÁMICA DESDE SUPABASE (estructura_lotes) ────
+// Fuente de verdad: tabla estructura_lotes, campaña 26/27.
+// Se cachea en localStorage para funcionar sin señal a campo.
+// EMPRESAS_FALLBACK solo se usa si nunca hubo conexión.
+const ESTRUCTURA_CAMPANA = "2026/27";
+const ESTRUCTURA_CACHE_KEY = "agro_estructura_2026_27";
+
+const buildEmpresas = (rows) => {
+  const map = {};
+  rows.forEach(r => {
+    const e = (r.empresa_nombre || "").trim(), c = (r.campo_nombre || "").trim(), l = (r.lote_nombre || "").trim();
+    if (!e || !c || !l) return;
+    if (!map[e]) map[e] = {};
+    if (!map[e][c]) map[e][c] = new Set();
+    map[e][c].add(l);
+  });
+  const cmp = (a, b) => a.localeCompare(b, "es", { numeric: true });
+  return Object.keys(map).sort(cmp).map(e => ({
+    empresa: e,
+    campos: Object.keys(map[e]).sort(cmp).map(c => ({ campo: c, lotes: [...map[e][c]].sort(cmp) })),
+  }));
+};
+
+const loadEstructuraCache = () => {
+  try {
+    const d = JSON.parse(localStorage.getItem(ESTRUCTURA_CACHE_KEY) || "null");
+    return Array.isArray(d) && d.length ? d : null;
+  } catch { return null; }
+};
+
+const fetchEstructuraLotes = async () => {
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/estructura_lotes?select=empresa_nombre,campo_nombre,lote_nombre&campana=eq.${encodeURIComponent(ESTRUCTURA_CAMPANA)}&limit=2000`,
+    { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+  );
+  if (!res.ok) throw new Error(await res.text());
+  const rows = await res.json();
+  if (!Array.isArray(rows) || rows.length === 0) throw new Error("estructura_lotes vacía");
+  const empresas = buildEmpresas(rows);
+  try { localStorage.setItem(ESTRUCTURA_CACHE_KEY, JSON.stringify(empresas)); } catch { /* sin espacio */ }
+  return empresas;
+};
+
+const EMPRESAS_FALLBACK = [
   { empresa: "IGNACIO HERRERA", campos: [
     { campo: "LASTRA", lotes: ["LASTRA 1","LASTRA 2","ZULEMA LASTRA"] },
   ]},
@@ -401,7 +444,7 @@ const EMPRESAS = [
     { campo: "CARDOZO", lotes: ["BERTOLI CARDOZO"] },
     { campo: "FIORI", lotes: ["BERTOLI FIORI"] },
     { campo: "EL SIN QUERER", lotes: ["EL SIN QUERER 1","EL SIN QUERER 2","EL SIN QUERER 3"] },
-    { campo: "URUNDAY", lotes: ["4","URUNDAY 1","URUNDAY 2","URUNDAY 3","URUNDAY 5","URUNDAY 6","URUNDAY 7"] },
+    { campo: "URUNDAY", lotes: ["URUNDAY 4","URUNDAY 1","URUNDAY 2","URUNDAY 3","URUNDAY 5","URUNDAY 6","URUNDAY 7"] },
     { campo: "SANTA MARIA", lotes: ["SANTA MARIA 1 (SM1)","SANTA MARIA 2 (SM2)","SANTA MARIA 3 (SM3)","SANTA MARIA 4 (SM4)","SANTA MARIA 5"] },
     { campo: "PERALTA", lotes: ["PERALTA 1"] },
     { campo: "GOROSITO", lotes: ["GOROSITO1"] },
@@ -432,8 +475,6 @@ const EMPRESAS = [
     { campo: "DON NICOLA", lotes: ["LOTE 1","LOTE 2","LOTE 3","LOTE 4","LOTE 5","LOTE 6","LOTE 7","LOTE 8","LOTE 9","LOTE 10","LOTE 11","LOTE 12"] },
   ]},
 ];
-const CAMPOS = EMPRESAS.flatMap(e => e.campos.map(c => ({ ...c, empresa: e.empresa })));
-const LOTES = CAMPOS.flatMap(c => c.lotes);
 
 const CULTIVOS = ["Maíz", "Soja", "Trigo", "Girasol", "Sorgo", "Otro"];
 const ENFERMEDADES = ["Roya", "Mancha marrón", "Tizón", "Podredumbre", "Fusarium", "Esclerotinia", "Carbón", "Otra"];
@@ -894,6 +935,15 @@ function Acordeon({ titulo, icono, badge, children, defaultOpen = false }) {
 
 function AppInner({ session, onLogout }) {
   const [step, setStep] = useState("form");
+  // Lotes desde estructura_lotes (Supabase) — cache offline, fallback hardcodeado
+  const [EMPRESAS, setEmpresas] = useState(() => loadEstructuraCache() || EMPRESAS_FALLBACK);
+  useEffect(() => {
+    let vivo = true;
+    const cargar = () => fetchEstructuraLotes().then(e => { if (vivo) setEmpresas(e); }).catch(() => {});
+    cargar();
+    window.addEventListener("online", cargar);
+    return () => { vivo = false; window.removeEventListener("online", cargar); };
+  }, []);
   const [tab, setTab] = useState("monitoreo"); // "monitoreo" | "gastos"
   const [photos, setPhotos] = useState([]);
   const [gps, setGps] = useState(null);
