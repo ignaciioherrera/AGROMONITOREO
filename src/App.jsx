@@ -1402,12 +1402,12 @@ function AppInner({ session, onLogout }) {
             placeholder="Seleccionar empresa..."
           />
           {data.empresa && (
-            <CustomSelect
+            <SearchSelect
               label="Campo *"
               value={data.campo}
               onChange={v => { set("campo", v); set("lote", ""); setSubzona(""); }}
               options={EMPRESAS.find(e => e.empresa === data.empresa)?.campos.map(c => c.campo) || []}
-              placeholder="Seleccionar campo..."
+              placeholder="Buscar campo..."
             />
           )}
           {data.campo && (() => {
