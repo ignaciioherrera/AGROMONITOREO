@@ -62,6 +62,62 @@ const subirTodasLasFotos = async (fotos, monitoreoId) => {
   return urls.filter(Boolean);
 };
 
+// ── COMPRESIÓN DE FOTOS ──────────────────────────────────────
+// Redimensiona a máx 1280px y JPEG 80%: ~5-10x más liviano,
+// sincroniza mucho más rápido con poca señal.
+const comprimirFoto = (file, maxDim = 1280, calidad = 0.8) => new Promise((resolve) => {
+  try {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      try {
+        let { width: w, height: h } = img;
+        if (w > maxDim || h > maxDim) {
+          const r = Math.min(maxDim / w, maxDim / h);
+          w = Math.round(w * r); h = Math.round(h * r);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL("image/jpeg", calidad);
+        URL.revokeObjectURL(url);
+        // fallback: si por algún motivo quedó más pesada, usar original
+        if (dataUrl.length > file.size * 1.4) {
+          const reader = new FileReader();
+          reader.onload = (ev) => resolve(ev.target.result);
+          reader.readAsDataURL(file);
+        } else resolve(dataUrl);
+      } catch {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve(ev.target.result);
+        reader.readAsDataURL(file);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      const reader = new FileReader();
+      reader.onload = (ev) => resolve(ev.target.result);
+      reader.readAsDataURL(file);
+    };
+    img.src = url;
+  } catch {
+    const reader = new FileReader();
+    reader.onload = (ev) => resolve(ev.target.result);
+    reader.readAsDataURL(file);
+  }
+});
+
+const dataUrlABlob = (dataUrl) => {
+  const [meta, b64] = dataUrl.split(",");
+  const mime = meta.split(";")[0].split(":")[1] || "image/jpeg";
+  const bytes = atob(b64);
+  const arr = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+};
+
 // ── ESTACION DE MUESTREO ─────────────────────────────────────
 // Clave: empresa + campo + fecha → contador correlativo por jornada
 const getEstacionKey = (empresa, campo, fecha) =>
@@ -1116,11 +1172,9 @@ function AppInner({ session, onLogout }) {
       );
     }
     Array.from(e.target.files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setPhotos(p => [...p, { name: file.name, url: ev.target.result, gps: photoGps, hora: new Date().toTimeString().slice(0,5) }]);
-      };
-      reader.readAsDataURL(file);
+      comprimirFoto(file).then(url => {
+        setPhotos(p => [...p, { name: file.name, url, gps: photoGps, hora: new Date().toTimeString().slice(0,5) }]);
+      });
     });
   };
 
@@ -1976,10 +2030,10 @@ function GastosScreen({ session }) {
   const onFoto = (e) => {
     const f = e.target.files[0];
     if (!f) return;
-    setFotoFile(f);
-    const reader = new FileReader();
-    reader.onload = (ev) => setFotoPreview(ev.target.result);
-    reader.readAsDataURL(f);
+    comprimirFoto(f).then(url => {
+      setFotoPreview(url);
+      setFotoFile(new File([dataUrlABlob(url)], "comprobante.jpg", { type: "image/jpeg" }));
+    });
   };
 
   const TIPOS = ["viatico","combustible","repuesto","moto","herramienta","otro"];
