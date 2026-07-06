@@ -1,6 +1,7 @@
 // AGRO·MONITOR Monitoreador v2.3 — Buscador lote + BERTOLI VARRONE
 import React, { useState, useRef, useEffect } from "react";
 
+const hoyLocal = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 const SUPABASE_URL = "https://izijmjntrpksmzuwvtle.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6aWptam50cnBrc216dXd2dGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MTQyNjAsImV4cCI6MjA4OTE5MDI2MH0.hsG0v5xmM81lCMU1VvwHETFp8C9Al4OPxoSyuyfY_ks";
 
@@ -1074,7 +1075,7 @@ function AppInner({ session, onLogout }) {
   const [subzona, setSubzona] = useState("");
   const [data, setData] = useState({
     empresa: "", campo: "", lote: "", cultivo: "",
-    fecha: new Date().toISOString().split("T")[0],
+    fecha: hoyLocal(),
     hora: new Date().toTimeString().slice(0, 5),
     estacionMuestreo: "",
     plantasPorMetro: "", distanciaEntresurco: "", estadioFenologico: "",
@@ -1902,7 +1903,7 @@ function AppInner({ session, onLogout }) {
 // ─────────────────────────────────────────────────────────────────────────
 function GastosScreen({ session }) {
   // tok se obtiene fresco en cada operación con refreshSessionIfNeeded()
-  const hoy = new Date().toISOString().split("T")[0];
+  const hoy = hoyLocal();
 
   // ── Estado KM ──
   const [km, setKm] = useState({ fecha: hoy, odometro: "", descripcion: "" });
