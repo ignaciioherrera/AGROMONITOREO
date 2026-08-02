@@ -1955,7 +1955,19 @@ function GastosScreen({ session }) {
   const guardarKm = async () => {
     if (!km.odometro) { setKmMsg("⚠ Ingresá el odómetro actual"); return; }
     const odoActual = parseFloat(km.odometro);
-    const kmRecorridos = lastOdometro ? Math.max(0, odoActual - parseFloat(lastOdometro.odometro)) : null;
+    const odoPrevio = lastOdometro ? parseFloat(lastOdometro.odometro) : null;
+    // Odómetro más bajo que el anterior: o cambiaste de moto, o hay un error de tipeo.
+    // Se pregunta antes de guardar porque un número mal cargado queda mal para siempre.
+    if (odoPrevio !== null && odoActual < odoPrevio) {
+      const ok = window.confirm(
+        `El odómetro que cargaste (${odoActual.toLocaleString("es-AR")} km) es MENOR que el último registrado ` +
+        `(${odoPrevio.toLocaleString("es-AR")} km).\n\n` +
+        `• Si CAMBIASTE DE MOTO, está bien: aceptá y se empieza a contar desde cero con la moto nueva.\n` +
+        `• Si es la misma moto, cancelá y revisá el número.`
+      );
+      if (!ok) return;
+    }
+    const kmRecorridos = odoPrevio !== null ? Math.max(0, odoActual - odoPrevio) : null;
     setKmSaving(true);
     try {
       const tok = await refreshSessionIfNeeded();
@@ -2068,6 +2080,20 @@ function GastosScreen({ session }) {
             <span style={{ fontSize:13, color:C.accent, fontWeight:700 }}>
               🏍 {(parseFloat(km.odometro) - parseFloat(lastOdometro.odometro)).toLocaleString("es-AR")} km recorridos hoy
             </span>
+          </div>
+        )}
+        {/* Odómetro más bajo que el anterior: cambio de moto o error de tipeo */}
+        {km.odometro && lastOdometro && parseFloat(km.odometro) < parseFloat(lastOdometro.odometro) && (
+          <div style={{ background:"#fff8e1", border:"1px solid #ffe082", borderRadius:10, padding:"12px 14px", marginBottom:10 }}>
+            <div style={{ fontSize:13, color:"#7a5c00", fontWeight:700, marginBottom:4 }}>
+              ⚠️ ¿Cambiaste de moto?
+            </div>
+            <div style={{ fontSize:12, color:"#7a5c00", lineHeight:1.5, fontFamily:SANS }}>
+              El número que pusiste es menor que el último registro
+              ({parseFloat(lastOdometro.odometro).toLocaleString("es-AR")} km).
+              Si es una moto nueva, cargá <strong>el odómetro real de esa moto</strong> y se empieza a contar de cero.
+              Si es la misma moto, revisá el número.
+            </div>
           </div>
         )}
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>

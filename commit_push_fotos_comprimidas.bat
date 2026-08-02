@@ -1,5 +1,5 @@
 @echo off
-cd /d "C:\Users\ignac\OneDrive\Documentos\GitHub\AGROMONITOREO"
+cd /d "C:\Users\ignac\proyectos\AGROMONITOREO"
 del /f /q ".git\index.lock" 2>nul
 del /f /q ".git\HEAD.lock" 2>nul
 git add src/App.jsx commit_push_fotos_comprimidas.bat
