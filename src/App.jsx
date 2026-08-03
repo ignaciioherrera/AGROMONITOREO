@@ -1593,7 +1593,9 @@ function AppInner({ session, onLogout }) {
                     Sin monitoreos previos para este lote
                   </div>
                 ) : historial.map((m, i) => {
-                  const UMBS = { isocas:2, chinches:1, pulgones:3, chicharrita:1, trips:5, aranhuelas:2, cogollero:1 };
+                  // Mismos umbrales que el admin (lib.js UMBRALES) y que el informe PDF.
+                  // isocas 5/m lineal · cogollero 5% de plantas dañadas.
+                  const UMBS = { isocas:5, chinches:1, pulgones:3, chicharrita:1, trips:5, aranhuelas:2, cogollero:5 };
                   const plagas = Object.keys(UMBS);
                   const alertas = plagas.filter(p => (parseFloat(m[p])||0) >= UMBS[p]);
                   const plagaLabels = { isocas:"Isocas", chinches:"Chinches", pulgones:"Pulgones", chicharrita:"Chicharrita", trips:"Trips", aranhuelas:"Arañuelas", cogollero:"Cogollero" };
