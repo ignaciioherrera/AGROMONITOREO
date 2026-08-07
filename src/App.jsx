@@ -1937,6 +1937,8 @@ function GastosScreen({ session }) {
   // ── Lista reciente ──
   const [gastos, setGastos] = useState([]);
   const [loadingList, setLoadingList] = useState(false);
+  const [editG, setEditG] = useState(null);   // gasto que se está editando
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const fetchGastos = async () => {
     setLoadingList(true);
@@ -1952,6 +1954,29 @@ function GastosScreen({ session }) {
       if (r.ok) setGastos(await r.json());
     } catch {}
     setLoadingList(false);
+  };
+
+  // Guardar edición de un gasto ya cargado
+  const guardarEdicionGasto = async () => {
+    if (!editG) return;
+    if (!editG.monto) { setGastoMsg("⚠ Ingresá el monto"); return; }
+    setSavingEdit(true);
+    try {
+      const tok = await refreshSessionIfNeeded();
+      const body = {
+        fecha: editG.fecha, tipo: editG.tipo,
+        monto: parseFloat(editG.monto) || 0, moneda: editG.moneda,
+        descripcion: editG.descripcion || null
+      };
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/monitor_gastos?id=eq.${editG.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${tok}`, Prefer: "return=minimal" },
+        body: JSON.stringify(body)
+      });
+      if (r.ok) { setEditG(null); fetchGastos(); }
+      else { setGastoMsg("✗ No se pudo editar (" + r.status + ")"); }
+    } catch (e) { setGastoMsg("✗ Error al editar"); }
+    setSavingEdit(false);
   };
 
   useEffect(() => { fetchGastos(); fetchLastKm(); }, []);
@@ -2193,23 +2218,70 @@ function GastosScreen({ session }) {
         ) : gastos.length === 0 ? (
           <div style={{ textAlign:"center", color:C.textFaint, padding:20, fontSize:13 }}>Sin gastos en los últimos 15 días</div>
         ) : gastos.map(g => (
-          <div key={g.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", padding:"10px 0", borderBottom:`1px solid ${C.border}` }}>
-            <div style={{ flex:1 }}>
-              <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                <span style={{ fontSize:16 }}>{TIPO_ICON[g.tipo]||"📄"}</span>
-                <span style={{ fontSize:13, fontWeight:700, color:C.text, fontFamily:SANS }}>{TIPO_LABEL[g.tipo]||g.tipo}</span>
-                <span style={{ fontSize:11, color:C.textFaint }}>{g.fecha}</span>
+          editG && editG.id === g.id ? (
+            /* ── Modo edición ── */
+            <div key={g.id} style={{ padding:"12px 0", borderBottom:`1px solid ${C.border}` }}>
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:8 }}>
+                {TIPOS.map(t => (
+                  <button key={t} onClick={()=>setEditG(p=>({...p,tipo:t}))}
+                    style={{ padding:"5px 10px", borderRadius:20, border:`1.5px solid ${editG.tipo===t?C.accent:C.border}`, background: editG.tipo===t?C.accentLight:C.surface, color: editG.tipo===t?C.accent:C.textFaint, fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:SANS }}>
+                    {TIPO_ICON[t]} {TIPO_LABEL[t]}
+                  </button>
+                ))}
               </div>
-              {g.descripcion && <div style={{ fontSize:12, color:C.textFaint, marginTop:2, marginLeft:22 }}>{g.descripcion}</div>}
-              {g.comprobante_url && <a href={g.comprobante_url} target="_blank" rel="noreferrer" style={{ fontSize:11, color:C.accent, marginLeft:22, display:"block", marginTop:2 }}>📎 Ver comprobante</a>}
-            </div>
-            <div style={{ textAlign:"right", flexShrink:0 }}>
-              <div style={{ fontSize:15, fontWeight:700, color: g.aprobado ? C.accent : C.text }}>
-                {g.moneda === "usd" ? "u$s" : "$"} {parseFloat(g.monto).toLocaleString("es-AR",{minimumFractionDigits:0})}
+              <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr", gap:8, marginBottom:8 }}>
+                <div>
+                  <label style={lbl}>Monto *</label>
+                  <input type="number" value={editG.monto} onChange={e=>setEditG(p=>({...p,monto:e.target.value}))} style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Moneda</label>
+                  <select value={editG.moneda} onChange={e=>setEditG(p=>({...p,moneda:e.target.value}))} style={inp}>
+                    <option value="ars">ARS $</option>
+                    <option value="usd">USD u$s</option>
+                  </select>
+                </div>
               </div>
-              {g.aprobado && <div style={{ fontSize:10, color:C.accent }}>✓ aprobado</div>}
+              <div style={{ marginBottom:8 }}>
+                <label style={lbl}>Fecha</label>
+                <input type="date" value={editG.fecha} onChange={e=>setEditG(p=>({...p,fecha:e.target.value}))} style={inp} />
+              </div>
+              <div style={{ marginBottom:10 }}>
+                <label style={lbl}>Descripción</label>
+                <input type="text" value={editG.descripcion||""} onChange={e=>setEditG(p=>({...p,descripcion:e.target.value}))} placeholder="Opcional" style={inp} />
+              </div>
+              <div style={{ display:"flex", gap:8 }}>
+                <button onClick={guardarEdicionGasto} disabled={savingEdit} style={{ ...btn(savingEdit), flex:1, padding:"10px" }}>
+                  {savingEdit ? "Guardando..." : "Guardar cambios"}
+                </button>
+                <button onClick={()=>setEditG(null)} style={{ flex:"0 0 auto", padding:"10px 16px", borderRadius:10, border:`1.5px solid ${C.border}`, background:C.surface, color:C.textFaint, fontSize:13, fontWeight:700, cursor:"pointer" }}>
+                  Cancelar
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* ── Vista normal ── */
+            <div key={g.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", padding:"10px 0", borderBottom:`1px solid ${C.border}` }}>
+              <div style={{ flex:1 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                  <span style={{ fontSize:16 }}>{TIPO_ICON[g.tipo]||"📄"}</span>
+                  <span style={{ fontSize:13, fontWeight:700, color:C.text, fontFamily:SANS }}>{TIPO_LABEL[g.tipo]||g.tipo}</span>
+                  <span style={{ fontSize:11, color:C.textFaint }}>{g.fecha}</span>
+                </div>
+                {g.descripcion && <div style={{ fontSize:12, color:C.textFaint, marginTop:2, marginLeft:22 }}>{g.descripcion}</div>}
+                {g.comprobante_url && <a href={g.comprobante_url} target="_blank" rel="noreferrer" style={{ fontSize:11, color:C.accent, marginLeft:22, display:"block", marginTop:2 }}>📎 Ver comprobante</a>}
+              </div>
+              <div style={{ textAlign:"right", flexShrink:0, display:"flex", flexDirection:"column", alignItems:"flex-end", gap:2 }}>
+                <div style={{ fontSize:15, fontWeight:700, color: g.aprobado ? C.accent : C.text }}>
+                  {g.moneda === "usd" ? "u$s" : "$"} {parseFloat(g.monto).toLocaleString("es-AR",{minimumFractionDigits:0})}
+                </div>
+                {g.aprobado
+                  ? <div style={{ fontSize:10, color:C.accent }}>✓ aprobado</div>
+                  : <button onClick={()=>setEditG({ id:g.id, fecha:g.fecha, tipo:g.tipo, monto:String(g.monto), moneda:g.moneda||"ars", descripcion:g.descripcion||"" })}
+                      style={{ background:"none", border:"none", color:C.accent, fontSize:12, fontWeight:700, cursor:"pointer", padding:0 }}>✏️ Editar</button>}
+              </div>
+            </div>
+          )
         ))}
       </div>
     </div>
