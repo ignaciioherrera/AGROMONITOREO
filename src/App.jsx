@@ -1944,7 +1944,9 @@ function GastosScreen({ session }) {
       const tok = await refreshSessionIfNeeded();
       const userId = session?.user?.id;
       const userFilter = userId ? `&user_id=eq.${userId}` : "";
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/monitor_gastos?order=fecha.desc,created_at.desc&limit=20${userFilter}`, {
+      // Solo los gastos del propio usuario de los últimos 15 días
+      const fecha15 = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/monitor_gastos?order=fecha.desc,created_at.desc&fecha=gte.${fecha15}&limit=50${userFilter}`, {
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${tok}` }
       });
       if (r.ok) setGastos(await r.json());
@@ -2179,13 +2181,16 @@ function GastosScreen({ session }) {
       {/* Historial reciente */}
       <div style={card}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-          <div style={{ fontSize:14, fontWeight:700, color:C.accent, fontFamily:FONT, letterSpacing:1 }}>📋 ÚLTIMOS GASTOS</div>
+          <div>
+            <div style={{ fontSize:14, fontWeight:700, color:C.accent, fontFamily:FONT, letterSpacing:1 }}>📋 ÚLTIMOS GASTOS</div>
+            <div style={{ fontSize:10, color:C.textFaint, marginTop:2 }}>Tus gastos de los últimos 15 días</div>
+          </div>
           <button onClick={fetchGastos} style={{ background:"none", border:"none", color:C.textFaint, fontSize:18, cursor:"pointer" }}>↻</button>
         </div>
         {loadingList ? (
           <div style={{ textAlign:"center", color:C.textFaint, padding:20, fontSize:13 }}>Cargando...</div>
         ) : gastos.length === 0 ? (
-          <div style={{ textAlign:"center", color:C.textFaint, padding:20, fontSize:13 }}>Sin gastos registrados</div>
+          <div style={{ textAlign:"center", color:C.textFaint, padding:20, fontSize:13 }}>Sin gastos en los últimos 15 días</div>
         ) : gastos.map(g => (
           <div key={g.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", padding:"10px 0", borderBottom:`1px solid ${C.border}` }}>
             <div style={{ flex:1 }}>
