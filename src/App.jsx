@@ -2014,7 +2014,8 @@ function GastosScreen({ session }) {
         body: JSON.stringify({
           fecha: gasto.fecha, tipo: gasto.tipo,
           monto: parseFloat(gasto.monto)||0, moneda: gasto.moneda,
-          descripcion: gasto.descripcion||null, comprobante_url
+          descripcion: gasto.descripcion||null, comprobante_url,
+          user_id: session?.user?.id || null
         })
       });
       let r = await doGuardar(tok);
