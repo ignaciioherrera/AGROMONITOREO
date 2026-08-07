@@ -1939,6 +1939,8 @@ function GastosScreen({ session }) {
   const [loadingList, setLoadingList] = useState(false);
   const [editG, setEditG] = useState(null);   // gasto que se está editando
   const [savingEdit, setSavingEdit] = useState(false);
+  const [editFoto, setEditFoto] = useState(null); // {file, preview} nueva foto al editar
+  const fotoEditRef = useRef();
 
   const fetchGastos = async () => {
     setLoadingList(true);
@@ -1968,12 +1970,23 @@ function GastosScreen({ session }) {
         monto: parseFloat(editG.monto) || 0, moneda: editG.moneda,
         descripcion: editG.descripcion || null
       };
+      // Foto nueva (reemplaza el comprobante)
+      if (editFoto?.file) {
+        const ext = editFoto.file.type.includes("png") ? "png" : "jpg";
+        const path = `comprobantes-monitor/${Date.now()}_comp.${ext}`;
+        const upRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${path}`, {
+          method: "POST",
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${tok}`, "Content-Type": editFoto.file.type, "x-upsert": "true" },
+          body: editFoto.file
+        });
+        if (upRes.ok) body.comprobante_url = `${SUPABASE_URL}/storage/v1/object/public/${path}`;
+      }
       const r = await fetch(`${SUPABASE_URL}/rest/v1/monitor_gastos?id=eq.${editG.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${tok}`, Prefer: "return=minimal" },
         body: JSON.stringify(body)
       });
-      if (r.ok) { setEditG(null); fetchGastos(); }
+      if (r.ok) { setEditG(null); setEditFoto(null); fetchGastos(); }
       else { setGastoMsg("✗ No se pudo editar (" + r.status + ")"); }
     } catch (e) { setGastoMsg("✗ Error al editar"); }
     setSavingEdit(false);
@@ -2076,6 +2089,14 @@ function GastosScreen({ session }) {
     comprimirFoto(f).then(url => {
       setFotoPreview(url);
       setFotoFile(new File([dataUrlABlob(url)], "comprobante.jpg", { type: "image/jpeg" }));
+    });
+  };
+
+  const onFotoEdit = (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    comprimirFoto(f).then(url => {
+      setEditFoto({ file: new File([dataUrlABlob(url)], "comprobante.jpg", { type: "image/jpeg" }), preview: url });
     });
   };
 
@@ -2250,11 +2271,29 @@ function GastosScreen({ session }) {
                 <label style={lbl}>Descripción</label>
                 <input type="text" value={editG.descripcion||""} onChange={e=>setEditG(p=>({...p,descripcion:e.target.value}))} placeholder="Opcional" style={inp} />
               </div>
+              {/* Foto comprobante */}
+              <div style={{ marginBottom:12 }}>
+                <label style={lbl}>Comprobante</label>
+                <input ref={fotoEditRef} type="file" accept="image/*" capture="environment" style={{ display:"none" }} onChange={onFotoEdit} />
+                {editFoto?.preview ? (
+                  <div style={{ position:"relative", display:"inline-block", width:"100%" }}>
+                    <img src={editFoto.preview} alt="nuevo comprobante" style={{ width:"100%", maxHeight:160, objectFit:"cover", borderRadius:10, display:"block" }} />
+                    <button onClick={()=>setEditFoto(null)} style={{ position:"absolute", top:6, right:6, background:"rgba(0,0,0,0.6)", border:"none", borderRadius:"50%", width:26, height:26, color:"#fff", fontSize:13, cursor:"pointer" }}>✕</button>
+                  </div>
+                ) : (
+                  <div style={{ display:"flex", gap:10, alignItems:"center", flexWrap:"wrap" }}>
+                    {editG.comprobante_url && <a href={editG.comprobante_url} target="_blank" rel="noreferrer" style={{ fontSize:12, color:C.accent }}>📎 Ver actual</a>}
+                    <button onClick={()=>fotoEditRef.current.click()} style={{ padding:"8px 12px", border:`2px dashed ${C.border}`, borderRadius:10, background:"transparent", color:C.textFaint, fontSize:13, cursor:"pointer", fontFamily:SANS }}>
+                      📸 {editG.comprobante_url ? "Cambiar foto" : "Agregar foto"}
+                    </button>
+                  </div>
+                )}
+              </div>
               <div style={{ display:"flex", gap:8 }}>
                 <button onClick={guardarEdicionGasto} disabled={savingEdit} style={{ ...btn(savingEdit), flex:1, padding:"10px" }}>
                   {savingEdit ? "Guardando..." : "Guardar cambios"}
                 </button>
-                <button onClick={()=>setEditG(null)} style={{ flex:"0 0 auto", padding:"10px 16px", borderRadius:10, border:`1.5px solid ${C.border}`, background:C.surface, color:C.textFaint, fontSize:13, fontWeight:700, cursor:"pointer" }}>
+                <button onClick={()=>{setEditG(null);setEditFoto(null);}} style={{ flex:"0 0 auto", padding:"10px 16px", borderRadius:10, border:`1.5px solid ${C.border}`, background:C.surface, color:C.textFaint, fontSize:13, fontWeight:700, cursor:"pointer" }}>
                   Cancelar
                 </button>
               </div>
@@ -2277,7 +2316,7 @@ function GastosScreen({ session }) {
                 </div>
                 {g.aprobado
                   ? <div style={{ fontSize:10, color:C.accent }}>✓ aprobado</div>
-                  : <button onClick={()=>setEditG({ id:g.id, fecha:g.fecha, tipo:g.tipo, monto:String(g.monto), moneda:g.moneda||"ars", descripcion:g.descripcion||"" })}
+                  : <button onClick={()=>{ setEditFoto(null); setEditG({ id:g.id, fecha:g.fecha, tipo:g.tipo, monto:String(g.monto), moneda:g.moneda||"ars", descripcion:g.descripcion||"", comprobante_url:g.comprobante_url||null }); }}
                       style={{ background:"none", border:"none", color:C.accent, fontSize:12, fontWeight:700, cursor:"pointer", padding:0 }}>✏️ Editar</button>}
               </div>
             </div>
